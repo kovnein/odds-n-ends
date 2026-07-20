@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Bench</title>
+<meta name="description" content="A workbench of things that got built.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="grid-backdrop" aria-hidden="true"></div>
+
+<header class="bench-header">
+  <div class="header-inner">
+    <p class="eyebrow">// project bench</p>
+    <h1 class="bench-title">Things I've built</h1>
+    <p class="bench-sub">A running rack of finished and in-progress builds. <span class="led-key"><span class="led led--live" aria-hidden="true"></span>live &nbsp; <span class="led led--standby" aria-hidden="true"></span>standby</span></p>
+  </div>
+</header>
+
+<main>
+  <section id="project-grid" class="project-grid" aria-label="Project list">
+    <!-- Cards are injected here by js/render.js, reading from js/projects.js -->
+    <p class="grid-empty" id="grid-empty" hidden>Nothing on the bench yet. Add an entry to <code>js/projects.js</code>.</p>
+  </section>
+</main>
+
+<footer class="bench-footer">
+  <p>Built and wired by hand. To add a project, open <code>js/projects.js</code> — no other file needs to change.</p>
+</footer>
+
+<script src="js/projects.js"></script>
+<script src="js/render.js"></script>
+</body>
+</html>
