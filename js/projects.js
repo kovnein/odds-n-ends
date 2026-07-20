@@ -31,7 +31,7 @@ const PROJECTS = [
     lang: "html",
     status: "live",
     repo: "https://github.com/kovnein/miniature-system",
-    demo: "https://kovnein.github.io/projects/spelling-bee-prep.html",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/spelling-bee-prep.html",
     tags: ["single-file", "TTS", "te reo"]
   },
 
@@ -41,7 +41,7 @@ const PROJECTS = [
     lang: "html",
     status: "live",
     repo: "",
-    demo: "https://kovnein.github.io/projects/times_table_bingo_builder.html",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/times_table_bingo_builder.html",
     tags: ["single-file", "jsPDF"]
   },
 
@@ -51,7 +51,7 @@ const PROJECTS = [
     lang: "html",
     status: "live",
     repo: "",
-    demo: "https://kovnein.github.io/projects/wordle-emoji-swap.html",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/wordle-emoji-swap.html",
     tags: ["single-file", "jsPDF"]
   }
 
