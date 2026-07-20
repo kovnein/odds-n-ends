@@ -41,13 +41,13 @@ const PROJECTS = [
     lang: "html",
     status: "live",
     repo: "",
-    demo: "https://kovnein.github.io/odds-n-ends/projects/times_table_bingo_builder.html",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/times_tables_bingo_builder.html",
     tags: ["single-file", "jsPDF"]
   },
 
   {
     title: "Wordle Emoji Transformer",
-    description: "Takes you wordle share and replaces the squares with the emoji of your choice.",
+    description: "Takes your wordle share and replaces the squares with the emoji of your choice.",
     lang: "html",
     status: "live",
     repo: "",
