@@ -58,7 +58,7 @@
   }
 
   function render() {
-    const projects = Array.isArray(window.PROJECTS) ? window.PROJECTS : [];
+    const projects = Array.isArray(PROJECTS) ? PROJECTS : [];
     if (!projects.length) {
       emptyMsg.hidden = false;
       return;
