@@ -1,2 +1,2 @@
 # odds-n-ends
-A collection of static html projects I made for probably silly reasons
+A collection of projects I made for probably silly reasons made accessable to the world
