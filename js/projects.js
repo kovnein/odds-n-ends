@@ -53,7 +53,7 @@ const PROJECTS = [
     repo: "",
     demo: "https://kovnein.github.io/odds-n-ends/projects/wordle-emoji-swap.html",
     tags: ["single-file", "jsPDF"]
-  }
+  },
 
   {
     title: "EXAMPLE — Python project, no web front-end yet",
