@@ -30,8 +30,8 @@ const PROJECTS = [
     description: "Practice tool for competitive spelling, built for my daughter's NZ Spelling Bee run — includes Te Reo Māori phonetic handling.",
     lang: "html",
     status: "live",
-    repo: "https://github.com/YOUR-USERNAME/spelling-bee-app",
-    demo: "https://YOUR-USERNAME.github.io/spelling-bee-app/",
+    repo: "https://github.com/kovnein/miniature-system",
+    demo: "https://kovnein.github.io/projects/spelling-bee-prep.html",
     tags: ["single-file", "TTS", "te reo"]
   },
 
@@ -40,17 +40,27 @@ const PROJECTS = [
     description: "Generates printable times-tables bingo cards with a chalkboard theme. Exports straight to PDF.",
     lang: "html",
     status: "live",
-    repo: "https://github.com/YOUR-USERNAME/times-tables-bingo",
-    demo: "https://YOUR-USERNAME.github.io/times-tables-bingo/",
+    repo: "",
+    demo: "https://kovnein.github.io/projects/times_table_bingo_builder.html",
     tags: ["single-file", "jsPDF"]
   },
+
+  {
+    title: "Wordle Emoji Transformer",
+    description: "Takes you wordle share and replaces the squares with the emoji of your choice.",
+    lang: "html",
+    status: "live",
+    repo: "",
+    demo: "https://kovnein.github.io/projects/wordle-emoji-swap.html",
+    tags: ["single-file", "jsPDF"]
+  }
 
   {
     title: "EXAMPLE — Python project, no web front-end yet",
     description: "Delete this card, or use it as your template: a Python project that's finished and on GitHub, but doesn't have a page to click into yet.",
     lang: "python",
     status: "standby",
-    repo: "https://github.com/YOUR-USERNAME/your-python-project",
+    repo: "https://github.com/kovnein/",
     demo: "",
     tags: ["example", "delete-me"]
   }

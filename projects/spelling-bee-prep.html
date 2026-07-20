@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spelling Bee Prep — NZ Spelling Bee</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --paper: #FAF6EB;
+    --paper-dim: #F2ECDC;
+    --ink: #20293A;
+    --ink-soft: #5A6376;
+    --honey: #C9852E;
+    --honey-deep: #A6661C;
+    --honey-pale: #F3DCB3;
+    --good: #3C7A52;
+    --bad: #B5483F;
+    --line: #E2D9C2;
+    --card-shadow: 0 1px 0 rgba(32,41,58,0.04), 0 12px 28px -12px rgba(32,41,58,0.18);
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+
+  body{
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(32,41,58,0.05) 1px, transparent 1px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  .wrap{
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 20px 80px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .brand-eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--honey-deep);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  h1{
+    font-family: 'Source Serif 4', serif;
+    font-size: 34px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .version-badge{
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--honey-deep);
+    background: var(--honey-pale);
+    border-radius: 999px;
+    padding: 3px 9px;
+    vertical-align: middle;
+    margin-left: 8px;
+    position: relative;
+    top: -3px;
+  }
+  .subtitle{
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    margin-top: 6px;
+    max-width: 480px;
+  }
+
+  .session-stats{
+    display:flex;
+    gap: 18px;
+    align-items: center;
+  }
+  .stat{
+    text-align: right;
+  }
+  .stat .num{
+    font-family: 'Source Serif 4', serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .stat .lbl{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- HONEYCOMB PROGRESS ---------- */
+  .honeycomb-row{
+    display:flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+    padding: 14px;
+    background: var(--paper-dim);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .hex{
+    width: 16px;
+    height: 18.5px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: #E5DCC4;
+    transition: background 0.25s, transform 0.2s;
+    flex-shrink: 0;
+  }
+  .hex.correct{ background: var(--good); }
+  .hex.wrong{ background: var(--bad); }
+  .hex.current{
+    background: var(--honey);
+    transform: scale(1.18);
+  }
+
+  /* ---------- CATEGORY SHELF ---------- */
+  .shelf-label{
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin: 0 0 10px 2px;
+  }
+  .shelf{
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 14px;
+    margin-bottom: 6px;
+    scrollbar-width: thin;
+  }
+  .cat-pill{
+    flex-shrink: 0;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .cat-pill:hover{ border-color: var(--honey); color: var(--ink); }
+  .cat-pill.active{
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .cat-pill .count{
+    opacity: 0.6;
+    font-weight: 500;
+    margin-left: 4px;
+  }
+
+  /* ---------- THE STAGE / CARD ---------- */
+  .stage{
+    position: relative;
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--line);
+    padding: 0;
+    margin-top: 18px;
+    overflow: hidden;
+  }
+  .stage-top{
+    padding: 30px 36px 26px;
+    text-align: center;
+    position: relative;
+  }
+  .stage-top::after{
+    content:"";
+    position: absolute;
+    bottom: 0; left: 36px; right: 36px;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .cat-tag{
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+
+  .play-button{
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: none;
+    background: var(--honey);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    box-shadow: 0 8px 20px -6px rgba(201,133,46,0.55);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    position: relative;
+  }
+  .play-button:hover{ transform: translateY(-2px); box-shadow: 0 12px 24px -6px rgba(201,133,46,0.6); }
+  .play-button:active{ transform: translateY(0px) scale(0.96); }
+  .play-button svg{ width: 30px; height: 30px; }
+  .play-button.speaking{
+    animation: pulse-ring 1.1s ease-out infinite;
+  }
+  @keyframes pulse-ring{
+    0%{ box-shadow: 0 8px 20px -6px rgba(201,133,46,0.55), 0 0 0 0 rgba(201,133,46,0.45); }
+    100%{ box-shadow: 0 8px 20px -6px rgba(201,133,46,0.55), 0 0 0 16px rgba(201,133,46,0); }
+  }
+
+  .play-hint{
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+
+  .audio-source-tag{
+    font-size: 11px;
+    color: var(--ink-soft);
+    opacity: 0.7;
+    min-height: 15px;
+    margin-bottom: 4px;
+  }
+  .audio-source-tag.online{ color: var(--good); opacity: 0.85; }
+
+  .word-number{
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .replay-row{
+    display:flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .ghost-btn{
+    background: transparent;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .ghost-btn:hover{ border-color: var(--honey-deep); color: var(--honey-deep); }
+  .ghost-btn:disabled{ opacity: 0.4; cursor: default; }
+  .ghost-btn svg{ width: 14px; height: 14px; }
+
+  /* ---------- INPUT AREA ---------- */
+  .stage-bottom{
+    padding: 26px 36px 32px;
+  }
+
+  .answer-row{
+    display: flex;
+    gap: 10px;
+  }
+  .answer-input{
+    flex: 1;
+    font-family: 'Source Serif 4', serif;
+    font-size: 22px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .answer-input:focus{ border-color: var(--honey); background: #fff; }
+  .answer-input.state-correct{ border-color: var(--good); background: #EEF6EF; }
+  .answer-input.state-wrong{ border-color: var(--bad); background: #FBEEEC; }
+
+  .submit-btn{
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 12px;
+    padding: 0 26px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .submit-btn:hover{ background: #2D3A50; }
+  .submit-btn:active{ transform: scale(0.97); }
+  .submit-btn:disabled{ opacity: 0.4; cursor: default; }
+
+  .feedback{
+    margin-top: 16px;
+    min-height: 26px;
+    font-size: 14.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .feedback.correct{ color: var(--good); }
+  .feedback.wrong{ color: var(--bad); }
+
+  .reveal-word{
+    font-family: 'Source Serif 4', serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- ON-SCREEN KEYBOARD ---------- */
+  .onscreen-keyboard{
+    margin-top: 18px;
+    user-select: none;
+  }
+  .kb-row{
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 6px;
+  }
+  .kb-key{
+    flex: 1;
+    max-width: 42px;
+    height: 42px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--paper-dim);
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: lowercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s, transform 0.06s;
+  }
+  .kb-key:hover{ background: var(--honey-pale); border-color: var(--honey); }
+  .kb-key:active{ transform: scale(0.92); background: var(--honey); color: #fff; }
+  .kb-key.kb-wide{
+    max-width: 64px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 560px){
+    .kb-key{ height: 40px; max-width: none; font-size: 15px; }
+    .kb-key.kb-wide{ font-size: 11px; }
+  }
+
+  .hint-toggle{
+    margin-top: 18px;
+    border-top: 1px dashed var(--line);
+    padding-top: 16px;
+  }
+  .hint-toggle button{
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hint-toggle button:hover{ color: var(--honey-deep); }
+  .hint-box{
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    display: none;
+  }
+  .hint-box.shown{ display: block; }
+  .hint-box .def-line{ margin-bottom: 6px; }
+  .hint-box .def-line b{ color: var(--ink); font-weight: 700; }
+  .hint-box .sent-line{ font-style: italic; }
+
+  .nav-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 22px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .nav-row-left{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-divider{ color: var(--line); font-size: 13px; }
+  .skip-link{
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .skip-link:hover{ color: var(--ink); }
+  .finish-link{ color: var(--bad); opacity: 0.75; }
+  .finish-link:hover{ color: var(--bad); opacity: 1; }
+
+  .finish-confirm{
+    display: none;
+    margin-top: 14px;
+    background: #FBEEEC;
+    border: 1px solid var(--bad);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: var(--ink);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .finish-confirm.shown{ display: flex; }
+  .finish-confirm-actions{
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .finish-confirm-yes{
+    background: var(--bad);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .finish-confirm-yes:hover{ background: #9A3B33; }
+
+  .next-btn{
+    background: var(--honey);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 22px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+  .next-btn.shown{ display: inline-flex; }
+  .next-btn:hover{ background: var(--honey-deep); }
+
+  /* ---------- LEVEL TOGGLE ---------- */
+  .control-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .level-toggle{
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .level-toggle label{
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+  }
+  .level-toggle input{ accent-color: var(--honey); }
+
+  .volume-control{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 14px 7px 12px;
+  }
+  .volume-control svg{ color: var(--ink-soft); flex-shrink: 0; }
+  .volume-control input[type="range"]{
+    width: 100px;
+    accent-color: var(--honey);
+    cursor: pointer;
+  }
+  .volume-control span{
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ---------- EMPTY / DONE STATE ---------- */
+  .done-state{
+    text-align: center;
+    padding: 50px 30px;
+  }
+  .done-state .big{
+    font-family: 'Source Serif 4', serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .done-state p{ color: var(--ink-soft); font-size: 14.5px; }
+
+  .missed-summary{
+    text-align: left;
+    margin: 26px auto 0;
+    max-width: 480px;
+    background: var(--paper-dim);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .missed-summary-clean{
+    text-align: center;
+    color: var(--good);
+    font-weight: 600;
+    font-size: 14.5px;
+  }
+  .missed-summary-title{
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+  .missed-cat-group{ margin-bottom: 12px; }
+  .missed-cat-group:last-child{ margin-bottom: 0; }
+  .missed-cat-label{
+    font-size: 12.5px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .missed-word-list{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .missed-word-chip{
+    font-family: 'Source Serif 4', serif;
+    font-size: 14px;
+    font-weight: 600;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 4px 10px;
+    color: var(--ink);
+  }
+  .missed-word-chip em{
+    font-style: normal;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
+  .restart-btn{
+    margin-top: 18px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 10px;
+    padding: 11px 24px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  footer{
+    text-align: center;
+    margin-top: 38px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 560px){
+    h1{ font-size: 27px; }
+    .session-stats{ gap: 12px; }
+    .stat .num{ font-size: 21px; }
+    .stage-top{ padding: 24px 20px 22px; }
+    .stage-bottom{ padding: 20px 20px 26px; }
+    .answer-row{ flex-direction: column; }
+    .submit-btn{ padding: 13px 0; }
+    .play-button{ width: 72px; height: 72px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand-eyebrow">NZ Spelling Bee · Practice Hive</div>
+      <h1>Spelling Bee Prep <span class="version-badge" id="versionBadge"></span></h1>
+      <div class="subtitle">Listen to the word, spell it out, and build your way up through ten word families.</div>
+    </div>
+    <div class="session-stats">
+      <div class="stat">
+        <div class="num" id="statCorrect">0</div>
+        <div class="lbl">Correct</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="statSeen">0</div>
+        <div class="lbl">Attempted</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="honeycomb-row" id="honeycombRow"></div>
+
+  <div class="shelf-label">Word families</div>
+  <div class="shelf" id="categoryShelf"></div>
+
+  <div class="control-row">
+    <div class="level-toggle">
+      <label><input type="checkbox" id="lvl1" checked> Core 100 list</label>
+      <label><input type="checkbox" id="lvl2" checked> Build-up words</label>
+      <label><input type="checkbox" id="lvl3"> Tricky</label>
+      <label><input type="checkbox" id="lvl4"> Challenging</label>
+    </div>
+    <div class="volume-control">
+      <svg id="volIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+      <input type="range" id="volumeSlider" min="0" max="100" value="100" step="5">
+      <span id="volumeLabel">100%</span>
+    </div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <footer>Tap the speaker to hear a word as many times as you like — there's no penalty for replaying. If words are still too quiet, turn up your device's own volume too — the slider above controls the top end of what your browser's voice can do.</footer>
+</div>
+
+<script>
+// NZ Spelling Bee word bank
+// Each word: { w: word, cat: category key, d: definition, s: example sentence, lvl: 1 (core list) or 2 (extension) }
+
+const CATEGORIES = [
+  { key: "literary", label: "Literary Terms", colour: "#8B4A6B" },
+  { key: "science", label: "Science", colour: "#2A6F77" },
+  { key: "geography", label: "Geography", colour: "#A6622A" },
+  { key: "tereo", label: "Te Reo Māori", colour: "#3C6E47" },
+  { key: "greek", label: "Greek Origin", colour: "#5B4B8A" },
+  { key: "latin", label: "Latin Origin", colour: "#9C3D54" },
+  { key: "music", label: "Music", colour: "#2F5C8A" },
+  { key: "current", label: "Current Affairs", colour: "#7A4A2A" },
+  { key: "nouns", label: "Interesting Nouns", colour: "#4A5A3A" },
+  { key: "adjectives", label: "Interesting Adjectives", colour: "#6B3F6B" },
+];
+
+const WORDS = [
+  // LITERARY TERMS
+  { w: "semantic", cat: "literary", lvl: 1, d: "Relating to meaning in language.", s: "There's a semantic difference between 'few' and 'none'." },
+  { w: "satirical", cat: "literary", lvl: 1, d: "Using humour or exaggeration to criticise something.", s: "The cartoon was a satirical look at politicians." },
+  { w: "thespian", cat: "literary", lvl: 1, d: "An actor, especially one in a play.", s: "The young thespian rehearsed her lines all afternoon." },
+  { w: "haiku", cat: "literary", lvl: 1, d: "A short Japanese poem with three lines of 5, 7 and 5 syllables.", s: "She wrote a haiku about autumn leaves." },
+  { w: "portmanteau", cat: "literary", lvl: 1, d: "A word made by blending two other words, like 'brunch'.", s: "'Smog' is a portmanteau of 'smoke' and 'fog'." },
+  { w: "scenario", cat: "literary", lvl: 1, d: "An imagined sequence of events; a possible situation.", s: "The teacher asked us to plan for the worst-case scenario." },
+  { w: "vernacular", cat: "literary", lvl: 1, d: "The everyday language spoken by ordinary people in a region.", s: "He slipped into the local vernacular when talking to his cousins." },
+  { w: "epitasis", cat: "literary", lvl: 1, d: "The part of a play where the plot's complications develop and build.", s: "The epitasis of the drama raised the tension before the climax." },
+  { w: "leitmotif", cat: "literary", lvl: 1, d: "A recurring theme associated with a person or idea in music or writing.", s: "The composer used a dark leitmotif whenever the villain appeared." },
+  { w: "bildungsroman", cat: "literary", lvl: 1, d: "A novel about a character's moral and psychological growth.", s: "The novel is a classic bildungsroman following a boy into adulthood." },
+  { w: "allegory", cat: "literary", lvl: 2, d: "A story with a hidden moral or political meaning.", s: "Animal Farm is an allegory about revolution and power." },
+  { w: "onomatopoeia", cat: "literary", lvl: 2, d: "A word that imitates the sound it describes, like 'buzz'.", s: "'Sizzle' and 'crash' are both examples of onomatopoeia." },
+  { w: "soliloquy", cat: "literary", lvl: 2, d: "A speech a character gives alone, revealing their thoughts.", s: "Hamlet's soliloquy begins with 'to be or not to be'." },
+  { w: "alliteration", cat: "literary", lvl: 2, d: "Repeating the same starting sound in nearby words.", s: "'Peter Piper picked' is a famous line of alliteration." },
+  { w: "protagonist", cat: "literary", lvl: 2, d: "The main character of a story.", s: "The protagonist had to choose between loyalty and ambition." },
+  { w: "metaphor", cat: "literary", lvl: 2, d: "A figure of speech describing one thing as another.", s: "'Time is a thief' is a well-known metaphor." },
+  { w: "narrative", cat: "literary", lvl: 2, d: "A spoken or written account of events; a story.", s: "The film told its narrative through flashbacks." },
+  { w: "anthology", cat: "literary", lvl: 2, d: "A collection of poems, stories or other writings.", s: "She bought an anthology of New Zealand short stories." },
+
+  // SCIENCE
+  { w: "temperature", cat: "science", lvl: 1, d: "A measure of how hot or cold something is.", s: "The temperature dropped sharply overnight." },
+  { w: "evaporate", cat: "science", lvl: 1, d: "To change from a liquid into a vapour or gas.", s: "Puddles evaporate quickly on a hot day." },
+  { w: "molecular", cat: "science", lvl: 1, d: "Relating to molecules, the smallest units of a substance.", s: "The scientist studied the molecular structure of water." },
+  { w: "calculus", cat: "science", lvl: 1, d: "A branch of mathematics dealing with rates of change.", s: "He found calculus difficult at first but grew to enjoy it." },
+  { w: "dimension", cat: "science", lvl: 1, d: "A measurable extent, such as length, width or height.", s: "The box has three dimensions: length, width and height." },
+  { w: "perigee", cat: "science", lvl: 1, d: "The point in an orbit closest to the Earth.", s: "The supermoon appeared larger at its perigee." },
+  { w: "hypothalamus", cat: "science", lvl: 1, d: "A part of the brain that controls body temperature and hunger.", s: "The hypothalamus helps regulate the body's internal balance." },
+  { w: "stalagmite", cat: "science", lvl: 1, d: "A mineral deposit that rises from a cave floor.", s: "The stalagmite had grown for thousands of years." },
+  { w: "pathogen", cat: "science", lvl: 1, d: "A microorganism that can cause disease.", s: "Washing hands helps stop the spread of pathogens." },
+  { w: "photosynthesis", cat: "science", lvl: 1, d: "The process by which plants make food using sunlight.", s: "Photosynthesis takes place in the leaves of a plant." },
+  { w: "stalactite", cat: "science", lvl: 2, d: "A mineral deposit that hangs from a cave ceiling.", s: "Water dripped slowly from the tip of the stalactite." },
+  { w: "chlorophyll", cat: "science", lvl: 2, d: "The green pigment in plants that absorbs sunlight.", s: "Chlorophyll gives leaves their green colour." },
+  { w: "ecosystem", cat: "science", lvl: 2, d: "A community of living things interacting with their environment.", s: "The wetland is a fragile ecosystem for many birds." },
+  { w: "velocity", cat: "science", lvl: 2, d: "The speed of something in a given direction.", s: "The rocket reached an enormous velocity at launch." },
+  { w: "organism", cat: "science", lvl: 2, d: "An individual living thing, like an animal or plant.", s: "Every organism needs energy to survive." },
+  { w: "gravitational", cat: "science", lvl: 2, d: "Relating to the force that pulls objects together.", s: "The moon's gravitational pull causes the tides." },
+  { w: "apogee", cat: "science", lvl: 2, d: "The point in an orbit farthest from the Earth.", s: "The satellite slowed down near its apogee." },
+  { w: "amoeba", cat: "science", lvl: 2, d: "A microscopic single-celled organism that constantly changes shape.", s: "Under the microscope, the amoeba moved by changing its shape." },
+
+  // GEOGRAPHY
+  { w: "sirocco", cat: "geography", lvl: 1, d: "A hot, dusty wind that blows from the Sahara towards Europe.", s: "The sirocco carried fine red dust across the city." },
+  { w: "quagmire", cat: "geography", lvl: 1, d: "A soft, boggy area of land that is hard to walk across.", s: "Their boots sank into the quagmire near the riverbank." },
+  { w: "katabatic", cat: "geography", lvl: 1, d: "Describing a wind caused by cold air flowing downhill.", s: "A katabatic wind swept down from the glacier each night." },
+  { w: "sediment", cat: "geography", lvl: 1, d: "Solid material that settles at the bottom of water.", s: "Layers of sediment built up over millions of years." },
+  { w: "pluvial", cat: "geography", lvl: 1, d: "Relating to or caused by rainfall.", s: "Pluvial flooding occurred after the heavy storm." },
+  { w: "sierra", cat: "geography", lvl: 1, d: "A long jagged mountain range.", s: "The sierra stretched along the horizon, peak after peak." },
+  { w: "cartographer", cat: "geography", lvl: 1, d: "A person who draws or makes maps.", s: "The cartographer carefully measured every coastline." },
+  { w: "alluvium", cat: "geography", lvl: 1, d: "Fine soil deposited by flowing water.", s: "The fertile alluvium made the valley ideal for farming." },
+  { w: "tombolo", cat: "geography", lvl: 1, d: "A sandbar that connects an island to the mainland.", s: "Visitors could walk across the tombolo at low tide." },
+  { w: "tributary", cat: "geography", lvl: 1, d: "A stream or river that flows into a larger one.", s: "The small tributary joined the main river near the bridge." },
+  { w: "isthmus", cat: "geography", lvl: 2, d: "A narrow strip of land connecting two larger areas.", s: "Ships could not cross the isthmus before the canal was built." },
+  { w: "plateau", cat: "geography", lvl: 2, d: "A large area of flat land that is higher than its surroundings.", s: "The hikers reached a wide plateau near the summit." },
+  { w: "archipelago", cat: "geography", lvl: 2, d: "A group of islands.", s: "The archipelago was made up of dozens of small islands." },
+  { w: "estuary", cat: "geography", lvl: 2, d: "The wide part of a river where it meets the sea.", s: "Many birds feed in the estuary at low tide." },
+  { w: "precipitation", cat: "geography", lvl: 2, d: "Rain, snow, sleet or hail falling to the ground.", s: "Annual precipitation in the region is unusually high." },
+  { w: "topography", cat: "geography", lvl: 2, d: "The arrangement of natural and physical features of an area.", s: "The map showed the rugged topography of the coastline." },
+  { w: "peninsula", cat: "geography", lvl: 2, d: "A piece of land almost surrounded by water.", s: "The lighthouse stood at the tip of the peninsula." },
+
+  // TE REO MĀORI
+  { w: "kaitiaki", cat: "tereo", lvl: 1, d: "A guardian or caretaker, especially of the natural environment.", s: "The students became kaitiaki of the school's native garden.", phon: "kai-tee-ah-kee" },
+  { w: "pounamu", cat: "tereo", lvl: 1, d: "Greenstone, a treasured type of jade found in New Zealand.", s: "She wore a pounamu pendant given to her by her grandmother.", phon: "poh-nah-moo" },
+  { w: "atua", cat: "tereo", lvl: 1, d: "A god or supernatural being in Māori tradition.", s: "Tāne is the atua of forests and birds.", phon: "ah-too-ah" },
+  { w: "haerenga", cat: "tereo", lvl: 1, d: "A journey or travel.", s: "Our class haerenga to the marae was unforgettable.", phon: "hah-eh-rehng-ah" },
+  { w: "kaiako", cat: "tereo", lvl: 1, d: "A teacher.", s: "Our kaiako taught us a new waiata this week.", phon: "kai-ah-koh" },
+  { w: "whakamā", cat: "tereo", lvl: 1, d: "A feeling of shyness, shame or embarrassment.", s: "He felt whakamā when he forgot his lines on stage.", phon: "fah-kah-maa" },
+  { w: "whakaaro", cat: "tereo", lvl: 1, d: "A thought, idea or opinion.", s: "She shared her whakaaro with the rest of the group.", phon: "fah-kah-ah-roh" },
+  { w: "maramataka", cat: "tereo", lvl: 1, d: "The Māori lunar calendar.", s: "Farmers used the maramataka to decide when to plant crops.", phon: "mah-rah-mah-tah-kah" },
+  { w: "mātauranga", cat: "tereo", lvl: 1, d: "Knowledge, wisdom or understanding, especially Māori knowledge.", s: "Mātauranga Māori is now taught alongside science in many schools.", phon: "mah-tau-rahng-ah" },
+  { w: "turangawaewae", cat: "tereo", lvl: 1, d: "A place where one has the right to stand; a place of belonging.", s: "The marae is her turangawaewae, the place she calls home.", phon: "too-rahng-ah-wai-wai" },
+  { w: "whānau", cat: "tereo", lvl: 2, d: "Extended family.", s: "Her whole whānau gathered for the celebration.", phon: "fah-now" },
+  { w: "manaakitanga", cat: "tereo", lvl: 2, d: "Hospitality, kindness and care for others.", s: "Manaakitanga was shown through the generous meal they prepared.", phon: "mah-nah-ah-kee-tahng-ah" },
+  { w: "rangatira", cat: "tereo", lvl: 2, d: "A chief or leader.", s: "The rangatira spoke first at the gathering.", phon: "rahng-ah-tee-rah" },
+  { w: "wairua", cat: "tereo", lvl: 2, d: "Spirit or soul.", s: "The carving was said to hold the wairua of its maker.", phon: "wai-roo-ah" },
+  { w: "tikanga", cat: "tereo", lvl: 2, d: "Customary practices and correct procedures.", s: "They followed tikanga carefully when entering the wharenui.", phon: "tee-kahng-ah" },
+  { w: "kaupapa", cat: "tereo", lvl: 2, d: "A plan, policy, or topic; a guiding purpose.", s: "The kaupapa of the project was environmental restoration.", phon: "kow-pah-pah" },
+  { w: "whenua", cat: "tereo", lvl: 2, d: "Land; also the word for placenta.", s: "They returned to bury the whenua on the family's land.", phon: "feh-noo-ah" },
+
+  // GREEK ORIGIN
+  { w: "polyphony", cat: "greek", lvl: 1, d: "Music with two or more independent melodic lines at once.", s: "The choir's polyphony filled the cathedral with sound." },
+  { w: "euphemistic", cat: "greek", lvl: 1, d: "Using mild words to describe something unpleasant.", s: "'Passed away' is a euphemistic way of saying someone died." },
+  { w: "anachronism", cat: "greek", lvl: 1, d: "Something placed in the wrong time period.", s: "The wristwatch in the medieval film was an obvious anachronism." },
+  { w: "eponymous", cat: "greek", lvl: 1, d: "Giving their own name to something, such as a book or band.", s: "The band's eponymous album shares the same name as the group." },
+  { w: "phlegmatic", cat: "greek", lvl: 1, d: "Calm and unemotional, not easily excited.", s: "He stayed phlegmatic even when everyone else panicked." },
+  { w: "pedagogue", cat: "greek", lvl: 1, d: "A teacher, sometimes one who is strict or formal.", s: "The old pedagogue insisted on perfect handwriting." },
+  { w: "draconian", cat: "greek", lvl: 1, d: "Excessively harsh or severe, especially of laws or rules.", s: "The new curfew was seen as a draconian measure." },
+  { w: "manticore", cat: "greek", lvl: 1, d: "A mythical creature with a lion's body and a human head.", s: "The manticore appeared in many ancient legends." },
+  { w: "labyrinth", cat: "greek", lvl: 1, d: "A complicated network of paths; a maze.", s: "They wandered through the garden's labyrinth for an hour." },
+  { w: "celadon", cat: "greek", lvl: 1, d: "A pale greyish-green colour, often used to describe pottery glaze.", s: "The vase was glazed a beautiful shade of celadon." },
+  { w: "chronological", cat: "greek", lvl: 2, d: "Arranged in the order in which events happened.", s: "The museum displayed the artefacts in chronological order." },
+  { w: "hyperbole", cat: "greek", lvl: 2, d: "Exaggerated statements not meant to be taken literally.", s: "Saying he ran 'a million miles' was clear hyperbole." },
+  { w: "philanthropy", cat: "greek", lvl: 2, d: "The practice of donating money to good causes.", s: "Her philanthropy funded a new library in the town." },
+  { w: "amphibian", cat: "greek", lvl: 2, d: "A cold-blooded animal that lives both in water and on land.", s: "Frogs are a well-known type of amphibian." },
+  { w: "democracy", cat: "greek", lvl: 2, d: "A system of government by the whole population through voting.", s: "New Zealand has a long history of democracy." },
+  { w: "metamorphosis", cat: "greek", lvl: 2, d: "A complete change of form, such as a caterpillar into a butterfly.", s: "The caterpillar's metamorphosis into a butterfly took two weeks." },
+  { w: "synonym", cat: "greek", lvl: 2, d: "A word that means almost the same as another word.", s: "'Happy' and 'joyful' are synonyms." },
+
+  // LATIN ORIGIN
+  { w: "propitiate", cat: "latin", lvl: 1, d: "To win the favour of someone by doing something pleasing.", s: "They offered gifts to propitiate the angry chief." },
+  { w: "vilify", cat: "latin", lvl: 1, d: "To speak or write about someone in a harshly critical way.", s: "The newspaper unfairly vilified the local council." },
+  { w: "ludicrous", cat: "latin", lvl: 1, d: "Absurd or ridiculous.", s: "It was ludicrous to think they could finish in one day." },
+  { w: "articulate", cat: "latin", lvl: 1, d: "Able to express ideas clearly; to express clearly.", s: "She gave an articulate speech without any notes." },
+  { w: "lucid", cat: "latin", lvl: 1, d: "Clear and easy to understand.", s: "His explanation of the problem was refreshingly lucid." },
+  { w: "delineate", cat: "latin", lvl: 1, d: "To describe or outline something precisely.", s: "The contract clearly delineated each person's responsibilities." },
+  { w: "enunciate", cat: "latin", lvl: 1, d: "To pronounce words clearly and distinctly.", s: "The teacher asked her to enunciate every syllable." },
+  { w: "ameliorate", cat: "latin", lvl: 1, d: "To make a bad situation better.", s: "New policies helped ameliorate the housing shortage." },
+  { w: "uxorious", cat: "latin", lvl: 1, d: "Showing excessive fondness or devotion to one's wife.", s: "His uxorious nature meant he agreed with her on everything." },
+  { w: "apposite", cat: "latin", lvl: 1, d: "Very appropriate in a particular situation.", s: "Her apposite comment summed up the whole discussion." },
+  { w: "tenacious", cat: "latin", lvl: 2, d: "Holding firmly onto something; persistent.", s: "The tenacious climber refused to give up near the summit." },
+  { w: "ambiguous", cat: "latin", lvl: 2, d: "Open to more than one interpretation; unclear.", s: "The instructions were so ambiguous that nobody knew what to do." },
+  { w: "credible", cat: "latin", lvl: 2, d: "Able to be believed; convincing.", s: "She gave a credible account of what had happened." },
+  { w: "benevolent", cat: "latin", lvl: 2, d: "Kind and generous.", s: "The benevolent donor funded the entire scholarship." },
+  { w: "superfluous", cat: "latin", lvl: 2, d: "More than is needed; unnecessary.", s: "He removed the superfluous details from his essay." },
+  { w: "veracity", cat: "latin", lvl: 2, d: "Truthfulness or accuracy.", s: "Journalists checked the veracity of the claim before printing it." },
+  { w: "magnanimous", cat: "latin", lvl: 2, d: "Generous or forgiving, especially towards a rival.", s: "The winning team was magnanimous in victory." },
+
+  // MUSIC
+  { w: "piccolo", cat: "music", lvl: 1, d: "A small flute that plays higher notes than a standard flute.", s: "The piccolo's bright sound cut through the orchestra." },
+  { w: "finale", cat: "music", lvl: 1, d: "The last part of a piece of music or a performance.", s: "Fireworks lit the sky during the concert's finale." },
+  { w: "balalaika", cat: "music", lvl: 1, d: "A Russian stringed instrument with a triangular body.", s: "He learned to play traditional folk songs on the balalaika." },
+  { w: "cantata", cat: "music", lvl: 1, d: "A piece of music for voices and instruments, often telling a story.", s: "The choir performed a cantata about the seasons." },
+  { w: "coloratura", cat: "music", lvl: 1, d: "Elaborate ornamentation in vocal music, or a singer skilled in it.", s: "Her coloratura soprano voice soared through the difficult aria." },
+  { w: "clarion", cat: "music", lvl: 1, d: "A clear, loud trumpet sound; also used to describe a clear call to action.", s: "The clarion call rang out across the battlefield." },
+  { w: "glockenspiel", cat: "music", lvl: 1, d: "A musical instrument with metal bars played with small mallets.", s: "The glockenspiel added a bright, bell-like sound to the song." },
+  { w: "harmonica", cat: "music", lvl: 1, d: "A small instrument played by blowing and drawing air through it.", s: "He played a blues tune on his harmonica." },
+  { w: "harmony", cat: "music", lvl: 1, d: "A pleasing combination of musical notes played together.", s: "The two singers blended perfectly in harmony." },
+  { w: "medley", cat: "music", lvl: 1, d: "A piece of music made up of parts from several different songs.", s: "The band closed the night with a medley of their greatest hits." },
+  { w: "crescendo", cat: "music", lvl: 2, d: "A gradual increase in loudness in a piece of music.", s: "The drums built to a thundering crescendo." },
+  { w: "tempo", cat: "music", lvl: 2, d: "The speed at which a piece of music is played.", s: "The conductor slowed the tempo for the final movement." },
+  { w: "symphony", cat: "music", lvl: 2, d: "A long piece of music for a full orchestra.", s: "The orchestra performed a symphony by Beethoven." },
+  { w: "rhapsody", cat: "music", lvl: 2, d: "A free-flowing piece of music expressing intense emotion.", s: "He composed a rhapsody inspired by the mountains." },
+  { w: "percussion", cat: "music", lvl: 2, d: "Instruments played by striking or shaking, like drums.", s: "The percussion section kept a steady beat throughout the piece." },
+  { w: "virtuoso", cat: "music", lvl: 2, d: "A person with exceptional skill in music or another art.", s: "The young violinist was already considered a virtuoso." },
+
+  // CURRENT AFFAIRS
+  { w: "caliphate", cat: "current", lvl: 1, d: "A state or territory ruled by an Islamic leader called a caliph.", s: "Historians studied how the caliphate expanded over centuries." },
+  { w: "feminism", cat: "current", lvl: 1, d: "The advocacy of equal rights for women.", s: "Her speech traced the history of feminism in New Zealand." },
+  { w: "pogrom", cat: "current", lvl: 1, d: "An organised attack and persecution of an ethnic or religious group.", s: "The museum exhibit documented the tragic pogrom." },
+  { w: "dictatorship", cat: "current", lvl: 1, d: "A government controlled by one ruler with absolute power.", s: "The country struggled to rebuild after years of dictatorship." },
+  { w: "filibuster", cat: "current", lvl: 1, d: "A long speech used to delay a decision in a parliament.", s: "The senator's filibuster lasted over twelve hours." },
+  { w: "diaspora", cat: "current", lvl: 1, d: "A large group of people who have spread from their original homeland.", s: "The Pacific diaspora has shaped communities across New Zealand." },
+  { w: "bellwether", cat: "current", lvl: 1, d: "Something that indicates a trend or shows what is coming.", s: "The small town was seen as a bellwether for the election." },
+  { w: "cadre", cat: "current", lvl: 1, d: "A small group of trained, dedicated people within an organisation.", s: "A cadre of volunteers organised the entire event." },
+  { w: "constituency", cat: "current", lvl: 1, d: "A body of voters in a specific area, or the area itself.", s: "The MP visited every town in her constituency." },
+  { w: "referendum", cat: "current", lvl: 1, d: "A vote by the public on a single political question.", s: "The flag referendum asked New Zealanders to choose a new design." },
+  { w: "legislation", cat: "current", lvl: 2, d: "Laws made by a parliament or governing body.", s: "New legislation was passed to protect native forests." },
+  { w: "sovereignty", cat: "current", lvl: 2, d: "Supreme authority or self-governing power over a territory.", s: "The treaty addressed questions of sovereignty." },
+  { w: "coalition", cat: "current", lvl: 2, d: "A temporary alliance between political parties or groups.", s: "The two parties formed a coalition government." },
+  { w: "humanitarian", cat: "current", lvl: 2, d: "Concerned with promoting human welfare.", s: "Aid workers responded to the humanitarian crisis." },
+  { w: "bureaucracy", cat: "current", lvl: 2, d: "A system of government with many officials and complex procedures.", s: "He grew frustrated with the bureaucracy of renewing his passport." },
+  { w: "embargo", cat: "current", lvl: 2, d: "An official ban on trade with a particular country.", s: "The country faced a trade embargo for several years." },
+
+  // INTERESTING NOUNS
+  { w: "cognition", cat: "nouns", lvl: 1, d: "The mental process of acquiring knowledge and understanding.", s: "The puzzle was designed to test a child's cognition." },
+  { w: "insignia", cat: "nouns", lvl: 1, d: "A badge or symbol showing rank, membership or achievement.", s: "The pilot's jacket bore the squadron's insignia." },
+  { w: "mortgage", cat: "nouns", lvl: 1, d: "A loan used to buy property, repaid over many years.", s: "They saved for years before taking out a mortgage." },
+  { w: "progeny", cat: "nouns", lvl: 1, d: "A person's children or descendants.", s: "The old oak's progeny now filled the entire orchard." },
+  { w: "elixir", cat: "nouns", lvl: 1, d: "A magical or medicinal potion believed to cure ailments.", s: "In the story, the elixir restored the king's health." },
+  { w: "ultimatum", cat: "nouns", lvl: 1, d: "A final demand, with a threat if it is not met.", s: "She gave her brother an ultimatum: apologise or leave." },
+  { w: "lassitude", cat: "nouns", lvl: 1, d: "A state of physical or mental weariness; lack of energy.", s: "A deep lassitude settled over the travellers after the long flight." },
+  { w: "aurora", cat: "nouns", lvl: 1, d: "A natural light display in the sky, seen near the poles.", s: "They drove south hoping to see the aurora." },
+  { w: "ingenuity", cat: "nouns", lvl: 1, d: "Cleverness and skill at inventing or solving problems.", s: "The bridge was a triumph of engineering ingenuity." },
+  { w: "morsel", cat: "nouns", lvl: 1, d: "A small piece or amount of food.", s: "She offered him the last morsel of cake." },
+  { w: "anomaly", cat: "nouns", lvl: 2, d: "Something that deviates from what is normal or expected.", s: "The scientist noticed a strange anomaly in the data." },
+  { w: "resilience", cat: "nouns", lvl: 2, d: "The ability to recover quickly from difficulties.", s: "Her resilience helped her bounce back after the setback." },
+  { w: "catalyst", cat: "nouns", lvl: 2, d: "Something that causes a change or event to happen.", s: "The new coach was a catalyst for the team's success." },
+  { w: "paradox", cat: "nouns", lvl: 2, d: "A statement or situation that seems contradictory but may be true.", s: "It's a paradox that the more we know, the more questions we have." },
+  { w: "euphoria", cat: "nouns", lvl: 2, d: "A feeling of intense happiness and excitement.", s: "Euphoria swept through the crowd as the final whistle blew." },
+  { w: "nostalgia", cat: "nouns", lvl: 2, d: "A sentimental longing for the past.", s: "The old photos filled her with nostalgia." },
+  { w: "predicament", cat: "nouns", lvl: 2, d: "A difficult or unpleasant situation.", s: "Losing his ticket left him in quite a predicament." },
+
+  // INTERESTING ADJECTIVES
+  { w: "turbulent", cat: "adjectives", lvl: 1, d: "Marked by sudden, violent change or disorder.", s: "The plane shook through the turbulent storm clouds." },
+  { w: "laconic", cat: "adjectives", lvl: 1, d: "Using very few words; concise to the point of seeming rude.", s: "His laconic reply gave nothing away." },
+  { w: "nostalgic", cat: "adjectives", lvl: 1, d: "Feeling sentimental longing for the past.", s: "The old song made her feel nostalgic for her childhood." },
+  { w: "verdant", cat: "adjectives", lvl: 1, d: "Green with healthy vegetation.", s: "The verdant hills stretched as far as they could see." },
+  { w: "reciprocal", cat: "adjectives", lvl: 1, d: "Given or felt by each side towards the other; mutual.", s: "Their friendship was built on reciprocal trust and respect." },
+  { w: "bountiful", cat: "adjectives", lvl: 1, d: "Plentiful; generously abundant.", s: "The orchard produced a bountiful harvest this year." },
+  { w: "inherent", cat: "adjectives", lvl: 1, d: "Existing as a natural or permanent part of something.", s: "There is an inherent risk in any extreme sport." },
+  { w: "reticent", cat: "adjectives", lvl: 1, d: "Reluctant to talk about or reveal one's thoughts.", s: "He was reticent about discussing his time overseas." },
+  { w: "exquisite", cat: "adjectives", lvl: 1, d: "Extremely beautiful and delicate.", s: "The necklace was an exquisite piece of craftsmanship." },
+  { w: "voracious", cat: "adjectives", lvl: 1, d: "Having a huge appetite, for food or for something like reading.", s: "She has always been a voracious reader." },
+  { w: "meticulous", cat: "adjectives", lvl: 2, d: "Showing great attention to detail; very careful and precise.", s: "He kept meticulous records of every experiment." },
+  { w: "ephemeral", cat: "adjectives", lvl: 2, d: "Lasting for only a short time.", s: "The beauty of cherry blossoms is famously ephemeral." },
+  { w: "tenuous", cat: "adjectives", lvl: 2, d: "Very weak or slight; barely sufficient.", s: "The evidence for the theory was tenuous at best." },
+  { w: "candid", cat: "adjectives", lvl: 2, d: "Truthful and straightforward; frank.", s: "She gave a candid account of what really happened." },
+  { w: "resilient", cat: "adjectives", lvl: 2, d: "Able to recover quickly from difficult conditions.", s: "The plant proved resilient even in the harsh drought." },
+  { w: "ambivalent", cat: "adjectives", lvl: 2, d: "Having mixed feelings about something.", s: "He felt ambivalent about moving to a new city." },
+  { w: "pragmatic", cat: "adjectives", lvl: 2, d: "Dealing with things sensibly and practically.", s: "Her pragmatic approach solved the problem quickly." },
+];
+
+// ===================================================================
+// BUILD-UP SET A (lvl 3) — "TRICKY": words chosen for spelling traps
+// (silent letters, doubled consonants, deceptive vowel digraphs,
+// unexpected letter patterns) rather than rarity or length.
+// 7 per category, 70 total.
+// ===================================================================
+const WORDS_SET_A = [
+  // LITERARY TERMS
+  { w: "rhyme", cat: "literary", lvl: 3, d: "A correspondence of sound between words or line endings.", s: "The poem's rhyme made it easy to remember." },
+  { w: "cacophony", cat: "literary", lvl: 3, d: "A harsh, jarring mixture of sounds.", s: "The opening scene was full of cacophony before the music settled." },
+  { w: "rhetoric", cat: "literary", lvl: 3, d: "The art of persuasive speaking or writing.", s: "His rhetoric won over much of the audience." },
+  { w: "colloquial", cat: "literary", lvl: 3, d: "Used in ordinary, informal conversation rather than formal writing.", s: "The dialogue was written in a deliberately colloquial style." },
+  { w: "burlesque", cat: "literary", lvl: 3, d: "A comically exaggerated imitation, especially in performance.", s: "The show was a burlesque of a typical courtroom drama." },
+  { w: "mnemonic", cat: "literary", lvl: 3, d: "A pattern of letters or words used as a memory aid.", s: "She used a mnemonic to remember the order of the planets." },
+  { w: "pseudonym", cat: "literary", lvl: 3, d: "A fictitious name used by an author instead of their real one.", s: "The novelist published under a pseudonym for years." },
+
+  // SCIENCE
+  { w: "rhythm", cat: "science", lvl: 3, d: "A regular, repeated pattern of movement or sound.", s: "The doctor checked the patient's heart rhythm." },
+  { w: "weight", cat: "science", lvl: 3, d: "A measure of how heavy something is, caused by gravity.", s: "The scale measured the weight of the sample precisely." },
+  { w: "psoriasis", cat: "science", lvl: 3, d: "A skin condition causing red, scaly patches.", s: "The dermatologist prescribed cream to treat his psoriasis." },
+  { w: "diaphragm", cat: "science", lvl: 3, d: "The muscle below the lungs that controls breathing.", s: "The diaphragm contracts each time a person breathes in." },
+  { w: "phlegm", cat: "science", lvl: 3, d: "Thick mucus produced in the airways, especially during illness.", s: "A bad cough often produces excess phlegm." },
+  { w: "rhinoceros", cat: "science", lvl: 3, d: "A large, thick-skinned mammal with one or two horns.", s: "The rhinoceros is one of the largest land mammals." },
+  { w: "chrysalis", cat: "science", lvl: 3, d: "The hard protective case a caterpillar forms before becoming a butterfly.", s: "The chrysalis hung quietly from the underside of the leaf." },
+
+  // GEOGRAPHY
+  { w: "reservoir", cat: "geography", lvl: 3, d: "A large natural or artificial lake used to store water.", s: "The reservoir supplies most of the city's drinking water." },
+  { w: "crevasse", cat: "geography", lvl: 3, d: "A deep, open crack, especially in glacial ice.", s: "The climbers roped together to cross the crevasse safely." },
+  { w: "foreign", cat: "geography", lvl: 3, d: "Belonging to or coming from a country other than one's own.", s: "She had visited many foreign countries before turning twenty." },
+  { w: "rendezvous", cat: "geography", lvl: 3, d: "A meeting at an agreed time and place.", s: "They arranged a rendezvous at the base of the mountain." },
+  { w: "boulevard", cat: "geography", lvl: 3, d: "A wide street, often lined with trees.", s: "Cafés lined both sides of the boulevard." },
+  { w: "knoll", cat: "geography", lvl: 3, d: "A small, rounded hill.", s: "They set up the picnic on a grassy knoll." },
+  { w: "bayou", cat: "geography", lvl: 3, d: "A slow-moving, marshy stream, especially in the southern United States.", s: "Mist hung low over the quiet bayou at dawn." },
+
+  // TE REO MĀORI
+  { w: "whakapapa", cat: "tereo", lvl: 3, d: "Genealogy; a record of descent through generations.", s: "She traced her whakapapa back through five generations.", phon: "fah-kah-pah-pah" },
+  { w: "tuakana", cat: "tereo", lvl: 3, d: "An older sibling or cousin of the same gender.", s: "His tuakana looked after him on his first day at school.", phon: "too-ah-kah-nah" },
+  { w: "teina", cat: "tereo", lvl: 3, d: "A younger sibling or cousin of the same gender.", s: "She often helped her teina with their reading.", phon: "tay-nah" },
+  { w: "hapu", cat: "tereo", lvl: 3, d: "A sub-tribe or clan, smaller than an iwi.", s: "Several hapu gathered at the marae for the occasion.", phon: "hah-poo" },
+  { w: "whaikorero", cat: "tereo", lvl: 3, d: "Formal speech-making, especially during a ceremony on a marae.", s: "The elder began the whaikorero as visitors were welcomed.", phon: "fai-kaw-reh-roh" },
+  { w: "rohe", cat: "tereo", lvl: 3, d: "A tribal area or territory.", s: "The project covered several towns within the iwi's rohe.", phon: "raw-heh" },
+  { w: "wharenui", cat: "tereo", lvl: 3, d: "A large meeting house on a marae, often carved.", s: "Visitors removed their shoes before entering the wharenui.", phon: "fah-reh-noo-e" },
+
+  // GREEK ORIGIN
+  { w: "rheumatism", cat: "greek", lvl: 3, d: "A condition causing pain and stiffness in joints and muscles.", s: "Cold, damp weather made her rheumatism flare up." },
+  { w: "psychology", cat: "greek", lvl: 3, d: "The scientific study of the mind and behaviour.", s: "She studied psychology at university." },
+  { w: "rhododendron", cat: "greek", lvl: 3, d: "A shrub with large clusters of bright flowers.", s: "The rhododendron bloomed bright pink in early spring." },
+  { w: "asthma", cat: "greek", lvl: 3, d: "A condition causing difficulty breathing due to narrowed airways.", s: "He carries an inhaler to manage his asthma." },
+  { w: "diphthong", cat: "greek", lvl: 3, d: "A sound formed by combining two vowels in a single syllable.", s: "The 'oi' in 'coin' is an example of a diphthong." },
+  { w: "pterodactyl", cat: "greek", lvl: 3, d: "An extinct flying reptile from the age of dinosaurs.", s: "The museum's pterodactyl skeleton hung from the ceiling." },
+  { w: "chasm", cat: "greek", lvl: 3, d: "A deep crack or gap in the ground, or a wide difference.", s: "A chasm opened between the two sides of the debate." },
+
+  // LATIN ORIGIN
+  { w: "occasion", cat: "latin", lvl: 3, d: "A particular event, time, or instance.", s: "The wedding was a joyful occasion for the whole family." },
+  { w: "accommodate", cat: "latin", lvl: 3, d: "To provide enough space or fit the needs of someone.", s: "The hall can accommodate up to two hundred guests." },
+  { w: "embarrass", cat: "latin", lvl: 3, d: "To cause someone to feel ashamed or self-conscious.", s: "He didn't mean to embarrass his sister in front of her friends." },
+  { w: "necessary", cat: "latin", lvl: 3, d: "Required or essential for a particular purpose.", s: "It was necessary to book tickets well in advance." },
+  { w: "occurrence", cat: "latin", lvl: 3, d: "Something that happens; an event or incident.", s: "Power cuts were a rare occurrence in the town." },
+  { w: "millennium", cat: "latin", lvl: 3, d: "A period of one thousand years.", s: "The festival marked the turn of the millennium." },
+  { w: "exaggerate", cat: "latin", lvl: 3, d: "To make something seem larger or more extreme than it is.", s: "He tended to exaggerate stories about his travels." },
+
+  // MUSIC
+  { w: "ukulele", cat: "music", lvl: 3, d: "A small four-stringed guitar-like instrument from Hawaii.", s: "She strummed a cheerful tune on the ukulele." },
+  { w: "accompaniment", cat: "music", lvl: 3, d: "Music played alongside a main performer or melody.", s: "The piano provided a gentle accompaniment to the singer." },
+  { w: "xylophone", cat: "music", lvl: 3, d: "A musical instrument with wooden bars played with mallets.", s: "She practised a simple tune on the xylophone." },
+  { w: "saxophone", cat: "music", lvl: 3, d: "A brass woodwind instrument with a curved body.", s: "He played the saxophone solo in the jazz band." },
+  { w: "pizzicato", cat: "music", lvl: 3, d: "A technique of plucking a string instrument instead of bowing it.", s: "The cellist switched to pizzicato for the playful middle section." },
+  { w: "arpeggio", cat: "music", lvl: 3, d: "The notes of a chord played one after another rather than together.", s: "The pianist opened with a flowing arpeggio." },
+  { w: "tambourine", cat: "music", lvl: 3, d: "A percussion instrument with jingling metal discs around a frame.", s: "She shook the tambourine in time with the song." },
+
+  // CURRENT AFFAIRS
+  { w: "bureaucrat", cat: "current", lvl: 3, d: "An official who works within a government bureaucracy.", s: "The form had to be approved by several bureaucrats." },
+  { w: "privilege", cat: "current", lvl: 3, d: "A special right or advantage available only to some.", s: "Education is a privilege not everyone shares equally." },
+  { w: "liaison", cat: "current", lvl: 3, d: "A person who acts as a link between groups; cooperation between them.", s: "She worked as a liaison between the two departments." },
+  { w: "questionnaire", cat: "current", lvl: 3, d: "A set of written questions used to gather information.", s: "Residents filled out a questionnaire about local services." },
+  { w: "subpoena", cat: "current", lvl: 3, d: "A legal order requiring someone to appear in court or provide evidence.", s: "The witness was issued a subpoena to testify." },
+  { w: "guerrilla", cat: "current", lvl: 3, d: "A member of a small, independent fighting force using irregular tactics.", s: "The region saw years of guerrilla conflict." },
+  { w: "indict", cat: "current", lvl: 3, d: "To formally charge someone with a serious crime.", s: "The grand jury voted to indict the former official." },
+
+  // INTERESTING NOUNS
+  { w: "innuendo", cat: "nouns", lvl: 3, d: "An indirect or subtle hint, especially about something suggestive.", s: "The comedian's jokes were full of playful innuendo." },
+  { w: "silhouette", cat: "nouns", lvl: 3, d: "The dark outline of a person or object against a lighter background.", s: "Her silhouette was visible against the sunset." },
+  { w: "connoisseur", cat: "nouns", lvl: 3, d: "An expert judge in matters of taste, especially food, art, or wine.", s: "He was known as a connoisseur of fine chocolate." },
+  { w: "entrepreneur", cat: "nouns", lvl: 3, d: "A person who sets up and runs a business, taking on financial risk.", s: "The young entrepreneur launched her first company at twenty." },
+  { w: "camaraderie", cat: "nouns", lvl: 3, d: "A feeling of trust and friendship among a group.", s: "There was real camaraderie among the team after the win." },
+  { w: "paraphernalia", cat: "nouns", lvl: 3, d: "A collection of miscellaneous items associated with an activity.", s: "The garage was full of camping paraphernalia." },
+  { w: "colonel", cat: "nouns", lvl: 3, d: "A senior officer rank in the army or air force.", s: "The colonel addressed the troops before they departed." },
+
+  // INTERESTING ADJECTIVES
+  { w: "conscientious", cat: "adjectives", lvl: 3, d: "Careful and thorough in carrying out one's duties.", s: "She was a conscientious student who never missed a deadline." },
+  { w: "miscellaneous", cat: "adjectives", lvl: 3, d: "Made up of various unrelated items or types.", s: "The drawer was full of miscellaneous odds and ends." },
+  { w: "rhetorical", cat: "adjectives", lvl: 3, d: "Relating to language used for persuasive or stylistic effect.", s: "It was a rhetorical question, not one she expected him to answer." },
+  { w: "irascible", cat: "adjectives", lvl: 3, d: "Easily made angry; quick-tempered.", s: "Their irascible neighbour complained about the smallest noise." },
+  { w: "unparalleled", cat: "adjectives", lvl: 3, d: "Having no equal; unmatched.", s: "The view from the summit was unparalleled." },
+  { w: "wizened", cat: "adjectives", lvl: 3, d: "Shrivelled or wrinkled with age.", s: "The wizened old apple had been left in the bowl too long." },
+  { w: "queasy", cat: "adjectives", lvl: 3, d: "Feeling slightly sick or nauseous.", s: "The rough ferry crossing left several passengers feeling queasy." },
+];
+
+// ===================================================================
+// BUILD-UP SET B (lvl 4) — "CHALLENGING": genuinely advanced vocabulary —
+// longer, rarer, more technical or Latinate words. Difficulty comes from
+// the word itself, not a specific spelling trap. 7 per category, 70 total.
+// ===================================================================
+const WORDS_SET_B = [
+  // LITERARY TERMS
+  { w: "metafiction", cat: "literary", lvl: 4, d: "Fiction that self-consciously draws attention to its own nature as a story.", s: "The novel's metafiction included a narrator who addressed the reader directly." },
+  { w: "apostrophe", cat: "literary", lvl: 4, d: "A figure of speech addressing someone absent or something non-human as if present.", s: "The poet's apostrophe to the sea gave the verse real power." },
+  { w: "synecdoche", cat: "literary", lvl: 4, d: "A figure of speech where a part represents the whole, or vice versa.", s: "Calling police officers 'the law' is an example of synecdoche." },
+  { w: "bathos", cat: "literary", lvl: 4, d: "An abrupt, often unintentional shift from a serious to a trivial tone.", s: "The tragic scene was undercut by an awkward moment of bathos." },
+  { w: "palimpsest", cat: "literary", lvl: 4, d: "Something reused or altered while still showing traces of its earlier form.", s: "The old city felt like a palimpsest of different eras." },
+  { w: "verisimilar", cat: "literary", lvl: 4, d: "Having the appearance of being true or real.", s: "The dialogue felt verisimilar, exactly how teenagers actually speak." },
+  { w: "anthropomorphism", cat: "literary", lvl: 4, d: "Giving human characteristics to animals or objects.", s: "The story relied on anthropomorphism, with animals who spoke and reasoned." },
+
+  // SCIENCE
+  { w: "mitochondria", cat: "science", lvl: 4, d: "Structures within cells that generate most of the cell's energy.", s: "Mitochondria are often called the powerhouse of the cell." },
+  { w: "chromosome", cat: "science", lvl: 4, d: "A thread-like structure carrying genetic information within a cell.", s: "Each chromosome carries thousands of genes." },
+  { w: "thermodynamics", cat: "science", lvl: 4, d: "The branch of physics dealing with heat and energy transfer.", s: "The engine's design relies on basic principles of thermodynamics." },
+  { w: "electromagnetic", cat: "science", lvl: 4, d: "Relating to the interaction between electric currents and magnetic fields.", s: "Radio waves are a form of electromagnetic radiation." },
+  { w: "photoreceptor", cat: "science", lvl: 4, d: "A cell that responds to light, especially in the eye.", s: "Photoreceptors in the retina detect different wavelengths of light." },
+  { w: "invertebrate", cat: "science", lvl: 4, d: "An animal without a backbone.", s: "Insects and worms are both examples of invertebrates." },
+  { w: "stratosphere", cat: "science", lvl: 4, d: "A layer of the Earth's atmosphere above the troposphere.", s: "The balloon rose high into the stratosphere before bursting." },
+
+  // GEOGRAPHY
+  { w: "antipodean", cat: "geography", lvl: 4, d: "Relating to places on opposite sides of the Earth, often Australia and NZ.", s: "The two cities sit in an almost antipodean relationship to each other." },
+  { w: "topographical", cat: "geography", lvl: 4, d: "Relating to the detailed mapping of an area's physical features.", s: "The topographical map showed every ridge and valley clearly." },
+  { w: "biogeography", cat: "geography", lvl: 4, d: "The study of how species are distributed across geographic space.", s: "Biogeography explains why similar species evolved on isolated islands." },
+  { w: "thermohaline", cat: "geography", lvl: 4, d: "Relating to ocean circulation driven by temperature and salinity differences.", s: "The thermohaline circulation moves vast volumes of water around the globe." },
+  { w: "anthropogenic", cat: "geography", lvl: 4, d: "Caused or influenced by human activity.", s: "Scientists measured anthropogenic changes to the river's flow." },
+  { w: "desertification", cat: "geography", lvl: 4, d: "The process by which fertile land becomes desert.", s: "Overgrazing accelerated desertification across the region." },
+  { w: "physiographic", cat: "geography", lvl: 4, d: "Relating to the physical geography of a region.", s: "The report divided the country into distinct physiographic zones." },
+
+  // TE REO MĀORI
+  { w: "rangatiratanga", cat: "tereo", lvl: 4, d: "Self-determination, sovereignty, or chieftainship.", s: "The treaty's wording around rangatiratanga remains widely discussed.", phon: "rahng-ah-tee-rah-tahng-ah" },
+  { w: "kaumatua", cat: "tereo", lvl: 4, d: "A respected elder, male or female, within Māori community.", s: "The kaumatua were seated at the front of the wharenui.", phon: "kao-mah-too-ah" },
+  { w: "wananga", cat: "tereo", lvl: 4, d: "A place of higher learning; also a discussion or seminar.", s: "She completed her degree through a wananga focused on Māori studies.", phon: "wah-nahng-ah" },
+  { w: "kawa", cat: "tereo", lvl: 4, d: "Marae protocol; the customs followed during a formal gathering.", s: "Visitors were briefed on the kawa before entering the wharenui.", phon: "kah-wah" },
+  { w: "pepeha", cat: "tereo", lvl: 4, d: "A formal way of introducing oneself, naming one's ancestral places and connections.", s: "Each student recited their pepeha on the first day of term.", phon: "peh-peh-hah" },
+  { w: "manawhenua", cat: "tereo", lvl: 4, d: "Territorial rights or authority held by an iwi or hapū over land.", s: "The hapū hold manawhenua over the surrounding coastline.", phon: "mah-nah-feh-noo-ah" },
+  { w: "kaitiakitanga", cat: "tereo", lvl: 4, d: "The practice and responsibility of guardianship over the environment.", s: "Kaitiakitanga shaped how the community managed the forest.", phon: "kai-tee-ah-kee-tahng-ah" },
+
+  // GREEK ORIGIN
+  { w: "epistemology", cat: "greek", lvl: 4, d: "The branch of philosophy concerned with the theory of knowledge.", s: "The course began with a brief introduction to epistemology." },
+  { w: "idiosyncrasy", cat: "greek", lvl: 4, d: "A peculiar or distinctive habit or trait belonging to a person.", s: "Tapping his pen twice before speaking was one of his idiosyncrasies." },
+  { w: "pharmacology", cat: "greek", lvl: 4, d: "The branch of medicine concerned with the uses and effects of drugs.", s: "She decided to specialise in pharmacology after her first year." },
+  { w: "hypothesis", cat: "greek", lvl: 4, d: "A proposed explanation made on the basis of limited evidence.", s: "The class tested their hypothesis with a simple experiment." },
+  { w: "paradigm", cat: "greek", lvl: 4, d: "A typical example or pattern of something; a model.", s: "The discovery represented a complete paradigm shift in the field." },
+  { w: "anachronistic", cat: "greek", lvl: 4, d: "Belonging to a time period other than the one being depicted.", s: "The director removed several anachronistic props before filming." },
+  { w: "androgynous", cat: "greek", lvl: 4, d: "Having both masculine and feminine characteristics; not clearly gendered.", s: "The costume design was deliberately androgynous." },
+
+  // LATIN ORIGIN
+  { w: "perspicacious", cat: "latin", lvl: 4, d: "Having keen insight or good judgement.", s: "Her perspicacious comments often anticipated problems before they arose." },
+  { w: "circumlocution", cat: "latin", lvl: 4, d: "The use of many words to express something that could be said more directly.", s: "He answered with such circumlocution that nobody understood his point." },
+  { w: "magnanimity", cat: "latin", lvl: 4, d: "Generosity or forgiveness, especially toward a rival.", s: "His magnanimity in defeat earned him respect from both teams." },
+  { w: "recalcitrant", cat: "latin", lvl: 4, d: "Stubbornly resistant to authority or guidance.", s: "The recalcitrant committee refused to consider any changes." },
+  { w: "sycophantic", cat: "latin", lvl: 4, d: "Behaving in an excessively flattering way to gain advantage.", s: "His sycophantic praise made the rest of the team uncomfortable." },
+  { w: "vicissitude", cat: "latin", lvl: 4, d: "A change of circumstances, often difficult and unwelcome.", s: "The family endured many vicissitudes during the long voyage." },
+  { w: "pusillanimous", cat: "latin", lvl: 4, d: "Showing a lack of courage; cowardly.", s: "His pusillanimous response disappointed everyone counting on him." },
+
+  // MUSIC
+  { w: "polyrhythm", cat: "music", lvl: 4, d: "The simultaneous use of two or more conflicting rhythms.", s: "The drummer layered a complex polyrhythm beneath the melody." },
+  { w: "counterpoint", cat: "music", lvl: 4, d: "The combination of two or more independent melodic lines.", s: "Bach was a master of counterpoint in his fugues." },
+  { w: "glissando", cat: "music", lvl: 4, d: "A continuous slide between two musical notes.", s: "The harpist finished the piece with a dramatic glissando." },
+  { w: "obbligato", cat: "music", lvl: 4, d: "A continuous instrumental part that accompanies a vocal or main melody.", s: "The flute obbligato wove gracefully around the soprano's line." },
+  { w: "antiphony", cat: "music", lvl: 4, d: "Music sung or played by two groups alternating with each other.", s: "The two choirs performed in antiphony from opposite ends of the hall." },
+  { w: "polyphonic", cat: "music", lvl: 4, d: "Having two or more independent melodic lines played at once.", s: "The choir's polyphonic arrangement layered four distinct voices." },
+  { w: "diminuendo", cat: "music", lvl: 4, d: "A gradual decrease in loudness in a piece of music.", s: "The orchestra faded into a soft diminuendo before the final chord." },
+
+  // CURRENT AFFAIRS
+  { w: "disenfranchise", cat: "current", lvl: 4, d: "To deprive someone of the right to vote or other legal rights.", s: "The new law risked disenfranchising thousands of voters." },
+  { w: "realpolitik", cat: "current", lvl: 4, d: "Politics based on practical considerations rather than ideals.", s: "The decision reflected realpolitik rather than any moral stance." },
+  { w: "isolationism", cat: "current", lvl: 4, d: "A policy of avoiding involvement in other countries' affairs.", s: "The senator argued strongly against a return to isolationism." },
+  { w: "protectionism", cat: "current", lvl: 4, d: "The practice of shielding domestic industries from foreign competition.", s: "Protectionism led to new tariffs on imported steel." },
+  { w: "kleptocracy", cat: "current", lvl: 4, d: "A government characterised by officials stealing public funds.", s: "The report accused the regime of operating as a kleptocracy." },
+  { w: "demagogue", cat: "current", lvl: 4, d: "A political leader who appeals to popular emotion rather than reason.", s: "Historians studied how the demagogue rose to power so quickly." },
+  { w: "subjugation", cat: "current", lvl: 4, d: "The act of bringing a group under domination or control.", s: "The museum exhibit documented the long history of subjugation." },
+
+  // INTERESTING NOUNS
+  { w: "imbroglio", cat: "nouns", lvl: 4, d: "An extremely confused or complicated situation.", s: "The contract dispute turned into a legal imbroglio." },
+  { w: "obfuscation", cat: "nouns", lvl: 4, d: "The act of deliberately making something unclear or confusing.", s: "Critics accused the report of obfuscation rather than honesty." },
+  { w: "juxtaposition", cat: "nouns", lvl: 4, d: "The placing of two contrasting things close together for effect.", s: "The exhibit relied on juxtaposition of old photographs and new ones." },
+  { w: "machination", cat: "nouns", lvl: 4, d: "A scheming or crafty plot.", s: "The novel slowly revealed the machinations behind the takeover." },
+  { w: "exigency", cat: "nouns", lvl: 4, d: "An urgent need or demand arising from a situation.", s: "The exigencies of the crisis forced a rapid decision." },
+  { w: "apotheosis", cat: "nouns", lvl: 4, d: "The highest point in the development of something; its finest example.", s: "The final concert was the apotheosis of her career." },
+  { w: "raconteur", cat: "nouns", lvl: 4, d: "A person who tells stories and anecdotes in an entertaining way.", s: "Her grandfather was a natural raconteur at every family dinner." },
+
+  // INTERESTING ADJECTIVES
+  { w: "pellucid", cat: "adjectives", lvl: 4, d: "Translucently clear, in style or in appearance.", s: "Her pellucid explanation made the complex topic easy to follow." },
+  { w: "sesquipedalian", cat: "adjectives", lvl: 4, d: "Characterised by long words; given to using long words.", s: "His sesquipedalian writing style intimidated younger students." },
+  { w: "lugubrious", cat: "adjectives", lvl: 4, d: "Looking or sounding sad and dismal.", s: "The lugubrious music set the tone for the final act." },
+  { w: "obstreperous", cat: "adjectives", lvl: 4, d: "Noisy and difficult to control.", s: "The obstreperous crowd refused to settle before the announcement." },
+  { w: "vituperative", cat: "adjectives", lvl: 4, d: "Bitter and abusive in language or tone.", s: "The review was unexpectedly vituperative for such a minor mistake." },
+  { w: "antediluvian", cat: "adjectives", lvl: 4, d: "Extremely old-fashioned or outdated; literally, before the biblical flood.", s: "His antediluvian views on technology frustrated his grandchildren." },
+  { w: "parsimonious", cat: "adjectives", lvl: 4, d: "Extremely unwilling to spend money or use resources; very frugal.", s: "His parsimonious habits meant he rarely treated himself to anything." },
+];
+
+if (typeof module !== "undefined") module.exports = { CATEGORIES, WORDS, WORDS_SET_A, WORDS_SET_B };
+
+</script>
+<script>
+  // ---------- VERSION ----------
+  const APP_VERSION = "1.6.0";
+
+  // ---------- STATE ----------
+  let activeCategory = "all";
+  let deck = [];
+  let currentIndex = 0;
+  let answered = false; // has current word been submitted (correct or wrong, final state)
+  let history = []; // { word, correct }
+  let synthVoice = null;
+  let speechVolume = 1.0; // 0 to 1 — Web Speech API's true ceiling, slider lets you dial down or confirm max
+
+  const els = {
+    honeycombRow: document.getElementById('honeycombRow'),
+    categoryShelf: document.getElementById('categoryShelf'),
+    stage: document.getElementById('stage'),
+    statCorrect: document.getElementById('statCorrect'),
+    statSeen: document.getElementById('statSeen'),
+    lvl1: document.getElementById('lvl1'),
+    lvl2: document.getElementById('lvl2'),
+    lvl3: document.getElementById('lvl3'),
+    lvl4: document.getElementById('lvl4'),
+  };
+
+  function catInfo(key){
+    return CATEGORIES.find(c => c.key === key);
+  }
+
+  function hexToRgba(hex, alpha){
+    const h = hex.replace('#','');
+    const r = parseInt(h.substring(0,2),16);
+    const g = parseInt(h.substring(2,4),16);
+    const b = parseInt(h.substring(4,6),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  // ---------- BUILD DECK ----------
+  function buildDeck(){
+    const showLvl1 = els.lvl1.checked;
+    const showLvl2 = els.lvl2.checked;
+    const showLvl3 = els.lvl3.checked;
+    const showLvl4 = els.lvl4.checked;
+    const allWords = [...WORDS, ...WORDS_SET_A, ...WORDS_SET_B];
+    let pool = allWords.filter(w => {
+      if (w.lvl === 1 && !showLvl1) return false;
+      if (w.lvl === 2 && !showLvl2) return false;
+      if (w.lvl === 3 && !showLvl3) return false;
+      if (w.lvl === 4 && !showLvl4) return false;
+      if (activeCategory !== "all" && w.cat !== activeCategory) return false;
+      return true;
+    });
+    // shuffle
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    deck = pool;
+    currentIndex = 0;
+    history = [];
+    updateStats();
+    renderHoneycomb();
+    renderStage();
+  }
+
+  // ---------- CATEGORY SHELF ----------
+  function renderShelf(){
+    const allWords = [...WORDS, ...WORDS_SET_A, ...WORDS_SET_B];
+    const levelMatches = (w) =>
+      (els.lvl1.checked && w.lvl===1) ||
+      (els.lvl2.checked && w.lvl===2) ||
+      (els.lvl3.checked && w.lvl===3) ||
+      (els.lvl4.checked && w.lvl===4);
+    const counts = { all: allWords.filter(levelMatches).length };
+    CATEGORIES.forEach(c => {
+      counts[c.key] = allWords.filter(w => w.cat === c.key && levelMatches(w)).length;
+    });
+
+    let html = `<button class="cat-pill ${activeCategory==='all'?'active':''}" data-cat="all">All words <span class="count">${counts.all}</span></button>`;
+    CATEGORIES.forEach(c => {
+      html += `<button class="cat-pill ${activeCategory===c.key?'active':''}" data-cat="${c.key}">${c.label} <span class="count">${counts[c.key]}</span></button>`;
+    });
+    els.categoryShelf.innerHTML = html;
+    els.categoryShelf.querySelectorAll('.cat-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeCategory = btn.dataset.cat;
+        renderShelf();
+        buildDeck();
+      });
+    });
+  }
+
+  // ---------- HONEYCOMB PROGRESS ----------
+  function renderMissedSummary(missed){
+    if (missed.length === 0){
+      return `<div class="missed-summary missed-summary-clean">No misses this round — every word landed. 🎉</div>`;
+    }
+    // group by category
+    const byCat = {};
+    missed.forEach(m => {
+      if (!byCat[m.cat]) byCat[m.cat] = [];
+      byCat[m.cat].push(m);
+    });
+    let html = `<div class="missed-summary"><div class="missed-summary-title">Words to revisit</div>`;
+    CATEGORIES.forEach(c => {
+      if (!byCat[c.key]) return;
+      html += `<div class="missed-cat-group">
+        <div class="missed-cat-label" style="color:${c.colour};">${c.label}</div>
+        <div class="missed-word-list">`;
+      byCat[c.key].forEach(m => {
+        html += `<span class="missed-word-chip">${m.word}${m.skipped ? ' <em>(skipped)</em>' : ''}</span>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  function renderHoneycomb(){
+    if (deck.length === 0) { els.honeycombRow.innerHTML = ''; return; }
+    let html = '';
+    for (let i = 0; i < deck.length; i++){
+      let cls = 'hex';
+      if (i < history.length) cls += history[i].correct ? ' correct' : ' wrong';
+      else if (i === currentIndex) cls += ' current';
+      html += `<div class="${cls}"></div>`;
+    }
+    els.honeycombRow.innerHTML = html;
+  }
+
+  function updateStats(){
+    const correct = history.filter(h => h.correct).length;
+    els.statCorrect.textContent = correct;
+    els.statSeen.textContent = history.length;
+  }
+
+  // ---------- SPEECH ----------
+  function pickVoice(){
+    const voices = window.speechSynthesis.getVoices();
+    // Prefer an en-NZ or en-AU or en-GB voice if available, else default
+    synthVoice = voices.find(v => v.lang === 'en-NZ')
+      || voices.find(v => v.lang === 'en-AU')
+      || voices.find(v => v.lang === 'en-GB')
+      || voices.find(v => v.lang && v.lang.startsWith('en'))
+      || voices[0] || null;
+  }
+  if ('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+    pickVoice();
+  }
+
+  function normalizeForCompare(str){
+    // Strip diacritics (e.g. ā, ē, ī, ō, ū macrons) so "whakama" matches "whakamā".
+    // Mātauranga Māori words use macrons that many keyboards can't easily type,
+    // so we don't penalise a learner for typing the plain letter.
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  function speakWordWithSpeechSynthesis(word, btnEl, phoneticText){
+    if (!('speechSynthesis' in window)) {
+      alert("Sorry, your browser doesn't support text-to-speech. Try Chrome, Edge or Safari.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    // Use the phonetic respelling when we have one — it reads closer to the
+    // real pronunciation than the dictionary spelling does on most browser voices.
+    const utter = new SpeechSynthesisUtterance(phoneticText || word);
+    if (synthVoice) utter.voice = synthVoice;
+    utter.rate = 0.82;
+    utter.pitch = 1.0;
+    utter.volume = speechVolume;
+    if (btnEl) btnEl.classList.add('speaking');
+    utter.onend = () => { if (btnEl) btnEl.classList.remove('speaking'); };
+    utter.onerror = () => { if (btnEl) btnEl.classList.remove('speaking'); };
+    window.speechSynthesis.speak(utter);
+  }
+
+  // Cache lookups so replaying a word doesn't re-hit the network every time.
+  // Maps word -> audio URL string, or null if we've confirmed there's no audio for it.
+  const pronunciationCache = {};
+
+  async function fetchOnlineAudioUrl(word){
+    if (word in pronunciationCache) return pronunciationCache[word];
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2500);
+      const res = await fetch(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timeout);
+      if (!res.ok) { pronunciationCache[word] = null; return null; }
+      const data = await res.json();
+      let audioUrl = null;
+      for (const entry of data){
+        const withAudio = (entry.phonetics || []).find(p => p.audio);
+        if (withAudio){
+          audioUrl = withAudio.audio.startsWith('//') ? 'https:' + withAudio.audio : withAudio.audio;
+          break;
+        }
+      }
+      pronunciationCache[word] = audioUrl;
+      return audioUrl;
+    } catch (err){
+      // Offline, blocked, timed out, or word not found — fall back silently.
+      pronunciationCache[word] = null;
+      return null;
+    }
+  }
+
+  function speakWord(word, btnEl, sourceTagEl, phoneticText){
+    // Words with a phonetic respelling (currently Te Reo Māori) skip the online
+    // English dictionary lookup entirely — it's an English-only service and would
+    // never have a real entry for these, so trying first just adds a pointless delay.
+    if (phoneticText){
+      if (sourceTagEl) { sourceTagEl.textContent = 'Using approximate phonetic guide (no online Te Reo audio source available)'; sourceTagEl.classList.remove('online'); }
+      speakWordWithSpeechSynthesis(word, btnEl, phoneticText);
+      return;
+    }
+    if (btnEl) btnEl.classList.add('speaking');
+    if (sourceTagEl) { sourceTagEl.textContent = 'Checking online pronunciation…'; sourceTagEl.classList.remove('online'); }
+    fetchOnlineAudioUrl(word).then(audioUrl => {
+      if (audioUrl){
+        const audio = new Audio(audioUrl);
+        audio.volume = speechVolume;
+        audio.onended = () => { if (btnEl) btnEl.classList.remove('speaking'); };
+        audio.onerror = () => {
+          // The URL existed but failed to actually play (dead link, CORS, etc.) — fall back.
+          if (sourceTagEl) { sourceTagEl.textContent = 'Using built-in voice (online clip unavailable)'; sourceTagEl.classList.remove('online'); }
+          speakWordWithSpeechSynthesis(word, btnEl);
+        };
+        audio.play().then(() => {
+          if (sourceTagEl) { sourceTagEl.textContent = '🔊 Online dictionary pronunciation'; sourceTagEl.classList.add('online'); }
+        }).catch(() => {
+          if (sourceTagEl) { sourceTagEl.textContent = 'Using built-in voice (online clip unavailable)'; sourceTagEl.classList.remove('online'); }
+          speakWordWithSpeechSynthesis(word, btnEl);
+        });
+      } else {
+        if (sourceTagEl) { sourceTagEl.textContent = 'Using built-in voice (no online clip found)'; sourceTagEl.classList.remove('online'); }
+        speakWordWithSpeechSynthesis(word, btnEl);
+      }
+    });
+  }
+
+  function speakSentence(sentence, word, phoneticText){
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    let textToSpeak = sentence;
+    if (phoneticText){
+      // Swap the dictionary-spelled word for its phonetic respelling wherever
+      // it appears in the sentence, so the word isn't mispronounced again here
+      // after the play button already used the corrected version.
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      textToSpeak = sentence.replace(new RegExp(escaped, 'gi'), phoneticText);
+    }
+    const utter = new SpeechSynthesisUtterance(textToSpeak);
+    if (synthVoice) utter.voice = synthVoice;
+    utter.rate = 0.85;
+    utter.volume = speechVolume;
+    window.speechSynthesis.speak(utter);
+  }
+
+  // ---------- STAGE RENDER ----------
+  function renderStage(){
+    if (deck.length === 0){
+      els.stage.innerHTML = `
+        <div class="done-state">
+          <div class="big">No words match that selection</div>
+          <p>Try choosing a different word family, or turn on a word level above.</p>
+        </div>`;
+      return;
+    }
+    if (currentIndex >= deck.length){
+      const correct = history.filter(h => h.correct).length;
+      const missed = history.filter(h => !h.correct);
+      els.stage.innerHTML = `
+        <div class="done-state">
+          <div class="big">🐝 Set complete — ${correct} / ${deck.length} correct</div>
+          <p>Nice work. Shuffle for another round, or pick a new word family above.</p>
+          ${renderMissedSummary(missed)}
+          <button class="restart-btn" id="restartBtn">Practise this set again</button>
+        </div>`;
+      document.getElementById('restartBtn').addEventListener('click', buildDeck);
+      return;
+    }
+
+    const item = deck[currentIndex];
+    const cat = catInfo(item.cat);
+
+    els.stage.innerHTML = `
+      <div class="stage-top">
+        <span class="cat-tag" style="background:${hexToRgba(cat.colour,0.12)}; color:${cat.colour};">${cat.label}</span>
+        <div class="word-number">Word ${currentIndex + 1} of ${deck.length}</div>
+        <button class="play-button" id="playBtn" aria-label="Play pronunciation">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="play-hint">Tap to hear the word</div>
+        <div class="audio-source-tag" id="audioSourceTag"></div>
+        <div class="replay-row">
+          <button class="ghost-btn" id="replayBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            Hear again
+          </button>
+          <button class="ghost-btn" id="sentenceBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Use it in a sentence
+          </button>
+        </div>
+      </div>
+      <div class="stage-bottom">
+        <div class="answer-row">
+          <input type="text" class="answer-input" id="answerInput" placeholder="Type the word here…" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button class="submit-btn" id="submitBtn">Check</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+
+        <div class="onscreen-keyboard" id="onscreenKeyboard">
+          <div class="kb-row">
+            <button class="kb-key" data-key="q">q</button><button class="kb-key" data-key="w">w</button><button class="kb-key" data-key="e">e</button><button class="kb-key" data-key="r">r</button><button class="kb-key" data-key="t">t</button><button class="kb-key" data-key="y">y</button><button class="kb-key" data-key="u">u</button><button class="kb-key" data-key="i">i</button><button class="kb-key" data-key="o">o</button><button class="kb-key" data-key="p">p</button>
+          </div>
+          <div class="kb-row">
+            <button class="kb-key" data-key="a">a</button><button class="kb-key" data-key="s">s</button><button class="kb-key" data-key="d">d</button><button class="kb-key" data-key="f">f</button><button class="kb-key" data-key="g">g</button><button class="kb-key" data-key="h">h</button><button class="kb-key" data-key="j">j</button><button class="kb-key" data-key="k">k</button><button class="kb-key" data-key="l">l</button>
+          </div>
+          <div class="kb-row">
+            <button class="kb-key kb-wide" data-action="clear">clear</button><button class="kb-key" data-key="z">z</button><button class="kb-key" data-key="x">x</button><button class="kb-key" data-key="c">c</button><button class="kb-key" data-key="v">v</button><button class="kb-key" data-key="b">b</button><button class="kb-key" data-key="n">n</button><button class="kb-key" data-key="m">m</button><button class="kb-key kb-wide" data-action="back" aria-label="Backspace">⌫</button>
+          </div>
+        </div>
+
+        <div class="hint-toggle">
+          <button id="hintToggleBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            Need a clue? Show the definition
+          </button>
+          <div class="hint-box" id="hintBox">
+            <div class="def-line"><b>Meaning:</b> ${item.d}</div>
+          </div>
+        </div>
+
+        <div class="nav-row">
+          <div class="nav-row-left">
+            <button class="skip-link" id="skipBtn">Skip this word</button>
+            <span class="nav-divider">·</span>
+            <button class="skip-link finish-link" id="finishBtn">Finish run now</button>
+          </div>
+          <button class="next-btn" id="nextBtn">Next word →</button>
+        </div>
+
+        <div class="finish-confirm" id="finishConfirm">
+          <span>End this run early? Words you haven't reached yet won't count.</span>
+          <div class="finish-confirm-actions">
+            <button class="ghost-btn" id="finishCancelBtn">Keep going</button>
+            <button class="finish-confirm-yes" id="finishConfirmBtn">Yes, finish now</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // wire up
+    const playBtn = document.getElementById('playBtn');
+    const replayBtn = document.getElementById('replayBtn');
+    const sentenceBtn = document.getElementById('sentenceBtn');
+    const input = document.getElementById('answerInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const feedback = document.getElementById('feedback');
+    const hintToggleBtn = document.getElementById('hintToggleBtn');
+    const hintBox = document.getElementById('hintBox');
+    const skipBtn = document.getElementById('skipBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const onscreenKeyboard = document.getElementById('onscreenKeyboard');
+    const finishBtn = document.getElementById('finishBtn');
+    const finishConfirm = document.getElementById('finishConfirm');
+    const finishCancelBtn = document.getElementById('finishCancelBtn');
+    const finishConfirmBtn = document.getElementById('finishConfirmBtn');
+    const audioSourceTag = document.getElementById('audioSourceTag');
+
+    playBtn.addEventListener('click', () => speakWord(item.w, playBtn, audioSourceTag, item.phon));
+    replayBtn.addEventListener('click', () => speakWord(item.w, playBtn, audioSourceTag, item.phon));
+    sentenceBtn.addEventListener('click', () => speakSentence(item.s, item.w, item.phon));
+    hintToggleBtn.addEventListener('click', () => hintBox.classList.toggle('shown'));
+
+    finishBtn.addEventListener('click', () => finishConfirm.classList.add('shown'));
+    finishCancelBtn.addEventListener('click', () => finishConfirm.classList.remove('shown'));
+    finishConfirmBtn.addEventListener('click', () => {
+      // Cut the deck off at whatever's been answered so far, then jump to the summary.
+      deck = deck.slice(0, history.length);
+      currentIndex = deck.length;
+      renderHoneycomb();
+      renderStage();
+    });
+
+    onscreenKeyboard.querySelectorAll('.kb-key').forEach(key => {
+      key.addEventListener('click', () => {
+        if (answered) return;
+        if (key.dataset.action === 'back'){
+          input.value = input.value.slice(0, -1);
+        } else if (key.dataset.action === 'clear'){
+          input.value = '';
+        } else {
+          input.value += key.dataset.key;
+        }
+        input.focus();
+      });
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !answered) submitAnswer();
+    });
+    submitBtn.addEventListener('click', () => { if (!answered) submitAnswer(); });
+    skipBtn.addEventListener('click', () => {
+      if (answered) return;
+      recordAnswer(false, true);
+    });
+    nextBtn.addEventListener('click', goNext);
+
+    // autoplay the word once when the card appears
+    setTimeout(() => speakWord(item.w, playBtn, audioSourceTag, item.phon), 350);
+    input.focus();
+
+    function submitAnswer(){
+      const guess = input.value.trim();
+      if (!guess) { input.focus(); return; }
+      const correct = normalizeForCompare(guess) === normalizeForCompare(item.w);
+      recordAnswer(correct, false, guess);
+    }
+
+    function recordAnswer(correct, skipped, guess){
+      answered = true;
+      history.push({ word: item.w, correct, cat: item.cat, skipped: !!skipped });
+      updateStats();
+      renderHoneycomb();
+      input.disabled = true;
+      submitBtn.disabled = true;
+      skipBtn.style.display = 'none';
+      nextBtn.classList.add('shown');
+      onscreenKeyboard.style.opacity = '0.45';
+      onscreenKeyboard.style.pointerEvents = 'none';
+
+      if (correct){
+        input.classList.add('state-correct');
+        feedback.classList.add('correct');
+        const hasMacron = /[āēīōū]/i.test(item.w);
+        const usedMacron = guess && /[āēīōū]/i.test(guess);
+        if (hasMacron && !usedMacron){
+          feedback.innerHTML = `✓ Correct! Worth knowing it's properly written <span class="reveal-word">${item.w}</span>, with the macron.`;
+        } else {
+          feedback.innerHTML = `✓ Correct — well spelled!`;
+        }
+      } else {
+        input.classList.add('state-wrong');
+        feedback.classList.add('wrong');
+        const label = skipped ? 'Skipped.' : `Not quite.`;
+        feedback.innerHTML = `${label} The correct spelling is <span class="reveal-word">${item.w}</span>.`;
+        hintBox.classList.add('shown');
+      }
+      // Note: we deliberately do NOT auto-focus the Next button here.
+      // If we did, a learner pressing Enter (e.g. out of habit right after
+      // submitting) would immediately trigger Next and skip past the
+      // feedback/correct-spelling reveal without ever seeing it.
+    }
+
+    function goNext(){
+      answered = false;
+      currentIndex++;
+      renderHoneycomb();
+      renderStage();
+    }
+  }
+
+  // ---------- VOLUME ----------
+  const volumeSlider = document.getElementById('volumeSlider');
+  const volumeLabel = document.getElementById('volumeLabel');
+  const volIcon = document.getElementById('volIcon');
+  volumeSlider.addEventListener('input', () => {
+    const pct = parseInt(volumeSlider.value, 10);
+    speechVolume = pct / 100;
+    volumeLabel.textContent = pct + '%';
+    volIcon.style.opacity = pct === 0 ? 0.4 : 1;
+  });
+
+  // ---------- LEVEL TOGGLES ----------
+  els.lvl1.addEventListener('change', () => { renderShelf(); buildDeck(); });
+  els.lvl2.addEventListener('change', () => { renderShelf(); buildDeck(); });
+  els.lvl3.addEventListener('change', () => { renderShelf(); buildDeck(); });
+  els.lvl4.addEventListener('change', () => { renderShelf(); buildDeck(); });
+
+  // ---------- INIT ----------
+  document.getElementById('versionBadge').textContent = 'v' + APP_VERSION;
+  renderShelf();
+  buildDeck();
+</script>
+</body>
+</html>

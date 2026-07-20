@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Times Tables Bingo Builder</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..900&family=Space+Mono:wght@400;700&family=Nunito+Sans:wght@400;600;700;800&display=swap');
+
+  :root{
+    --chalk-green:#1f3d2e;
+    --chalk-green-dark:#152b20;
+    --cream:#f4f1e8;
+    --cream-dim:#e8e3d3;
+    --ink:#2b2620;
+    --brick:#b5482f;
+    --brick-dark:#8f3622;
+    --ivory:#fdfaf3;
+    --line:#c9c2ab;
+    --gold:#d4a73d;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background: var(--chalk-green);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.04), transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03), transparent 50%);
+    color: var(--cream);
+    font-family:'Nunito Sans', sans-serif;
+    min-height:100vh;
+  }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:32px 24px 80px;
+  }
+
+  header{
+    text-align:center;
+    margin-bottom:36px;
+  }
+  .version-badge{
+    position:fixed;
+    top:14px;
+    right:16px;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    background: rgba(244,241,232,0.12);
+    border:1px solid rgba(244,241,232,0.3);
+    color: var(--cream-dim);
+    padding:5px 10px;
+    border-radius:20px;
+    z-index:10;
+  }
+  @media (max-width: 600px){
+    .version-badge{ position:static; display:inline-block; margin-bottom:14px; }
+  }
+
+  header .eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color: var(--gold);
+    margin-bottom:10px;
+  }
+  header h1{
+    font-family:'Fraunces', serif;
+    font-weight:800;
+    font-size:clamp(32px, 5vw, 52px);
+    margin:0 0 8px;
+    letter-spacing:-0.5px;
+  }
+  header h1 .x{
+    color: var(--brick);
+    font-style:italic;
+  }
+  header p{
+    color: var(--cream-dim);
+    font-size:15px;
+    max-width:520px;
+    margin:0 auto;
+    line-height:1.5;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    .layout{ grid-template-columns: 1fr; }
+  }
+
+  .panel{
+    background: var(--ivory);
+    color: var(--ink);
+    border-radius:14px;
+    padding:24px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  }
+
+  .panel h2{
+    font-family:'Fraunces', serif;
+    font-size:19px;
+    font-weight:700;
+    margin:0 0 4px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel .panel-sub{
+    font-size:12.5px;
+    color:#6b6354;
+    margin:0 0 16px;
+  }
+
+  /* Table selector grid */
+  .table-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .table-btn{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:15px;
+    background: var(--cream);
+    border:2px solid var(--line);
+    border-radius:8px;
+    padding:10px 0;
+    cursor:pointer;
+    color: var(--ink);
+    transition: all 0.12s ease;
+    position:relative;
+  }
+  .table-btn:hover{ border-color: var(--brick); }
+  .table-btn.active{
+    background: var(--chalk-green);
+    border-color: var(--chalk-green);
+    color: var(--cream);
+  }
+  .table-btn.active::after{
+    content:'×';
+    position:absolute;
+    top:-6px; right:-6px;
+    width:16px;height:16px;
+    background: var(--brick);
+    color:#fff;
+    border-radius:50%;
+    font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+    line-height:1;
+  }
+
+  .preset-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .preset-btn{
+    font-family:'Nunito Sans', sans-serif;
+    font-weight:700;
+    font-size:12.5px;
+    background:none;
+    border:1.5px solid var(--ink);
+    border-radius:20px;
+    padding:7px 14px;
+    cursor:pointer;
+    color: var(--ink);
+    transition: all 0.12s ease;
+  }
+  .preset-btn:hover{
+    background: var(--ink);
+    color: var(--cream);
+  }
+
+  .divider{
+    border:none;
+    border-top:1.5px dashed var(--line);
+    margin:18px 0;
+  }
+
+  .option-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .option-row label{
+    font-weight:700;
+    font-size:13.5px;
+  }
+  .option-row .option-controls{
+    display:flex;
+    gap:6px;
+  }
+  .seg-btn{
+    font-family:'Space Mono', monospace;
+    font-size:12.5px;
+    font-weight:700;
+    background: var(--cream);
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    padding:6px 12px;
+    cursor:pointer;
+    color: var(--ink);
+  }
+  .seg-btn.active{
+    background: var(--brick);
+    border-color: var(--brick);
+    color:#fff;
+  }
+
+  .count-stat{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:#6b6354;
+    background: var(--cream);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:18px;
+  }
+  .count-stat strong{ color: var(--brick); font-size:14px; }
+  .count-stat.warn{ color: var(--brick-dark); font-weight:700; }
+
+  .generate-btn{
+    width:100%;
+    font-family:'Fraunces', serif;
+    font-weight:800;
+    font-size:18px;
+    background: var(--brick);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:16px;
+    cursor:pointer;
+    box-shadow: 0 6px 0 var(--brick-dark);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .generate-btn:hover{ filter:brightness(1.05); }
+  .generate-btn:active{
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--brick-dark);
+  }
+  .generate-btn:disabled{
+    background:#9c9282;
+    box-shadow:0 6px 0 #7c7464;
+    cursor:not-allowed;
+  }
+
+  .pdf-status{
+    text-align:center;
+    font-size:12.5px;
+    color: var(--cream-dim);
+    margin-top:10px;
+    min-height:16px;
+  }
+
+  /* Dice panel */
+  .dice-panel{
+    text-align:center;
+  }
+  .dice-stage{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin:18px 0 14px;
+    perspective:600px;
+  }
+  .die{
+    width:84px;
+    height:84px;
+    background: linear-gradient(145deg, #fff, var(--cream));
+    border:3px solid var(--ink);
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:34px;
+    color: var(--ink);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+  }
+  .die.rolling{
+    animation: tumble 0.5s ease-out;
+  }
+  @keyframes tumble{
+    0%{ transform: rotate(0deg) scale(1); }
+    25%{ transform: rotate(-18deg) scale(1.08); }
+    50%{ transform: rotate(14deg) scale(0.95); }
+    75%{ transform: rotate(-8deg) scale(1.04); }
+    100%{ transform: rotate(0deg) scale(1); }
+  }
+  .die .label{
+    position:absolute;
+    bottom:-20px;
+    font-family:'Nunito Sans', sans-serif;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:1px;
+    color:#6b6354;
+  }
+  .die-wrap{ position:relative; }
+
+  .equation-display{
+    font-family:'Fraunces', serif;
+    font-weight:800;
+    font-size:38px;
+    margin:18px 0 6px;
+    color: var(--chalk-green);
+  }
+  .equation-display .op{ color: var(--brick); margin:0 8px; }
+  .equation-display .eq{ color:#a39c89; margin:0 8px; }
+  .equation-display .product{
+    display:inline-block;
+    min-width:56px;
+  }
+  .equation-display .product.hidden{
+    color: transparent;
+    position:relative;
+  }
+  .equation-display .product.hidden::after{
+    content:'?';
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    color: var(--gold);
+  }
+
+  .roll-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:8px;
+  }
+  .roll-btn{
+    font-family:'Nunito Sans', sans-serif;
+    font-weight:800;
+    font-size:14px;
+    background: var(--chalk-green);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:11px 20px;
+    cursor:pointer;
+    box-shadow: 0 4px 0 var(--chalk-green-dark);
+  }
+  .roll-btn:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--chalk-green-dark); }
+  .reveal-btn{
+    font-family:'Nunito Sans', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    background:none;
+    border:1.5px solid var(--ink);
+    border-radius:8px;
+    padding:10px 16px;
+    cursor:pointer;
+    color: var(--ink);
+  }
+
+  .roll-log{
+    margin-top:14px;
+    text-align:left;
+    background: var(--cream);
+    border-radius:10px;
+    padding:12px 14px;
+    max-height:130px;
+    overflow-y:auto;
+    font-family:'Space Mono', monospace;
+    font-size:12.5px;
+    color:#5a5345;
+  }
+  .roll-log .empty{ color:#a39c89; font-style:italic; }
+  .roll-log .entry{ padding:3px 0; border-bottom:1px dotted var(--line); }
+  .roll-log .entry:last-child{ border-bottom:none; }
+  .roll-log .entry .miss{ color:var(--brick); font-weight:700; }
+
+  /* Preview */
+  .preview-section{
+    margin-top:28px;
+  }
+  .preview-section h2{
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    text-align:center;
+    margin-bottom:4px;
+  }
+  .preview-section .panel-sub{
+    text-align:center;
+    margin-bottom:18px;
+  }
+
+  .preview-sheet{
+    background:#fff;
+    color:#1f2937;
+    width:100%;
+    max-width:780px;
+    margin:0 auto 18px;
+    aspect-ratio: 210/297;
+    border-radius:6px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    padding:3.5%;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .preview-card{
+    border:3px solid #1f2937;
+    border-radius:10px;
+    padding:3%;
+    height:46%;
+    display:flex;
+    flex-direction:column;
+  }
+  .preview-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:2%;
+  }
+  .preview-card-title{
+    font-family:'Fraunces', serif;
+    font-weight:800;
+    font-size:clamp(11px, 2vw, 16px);
+    color:#1f3d2e;
+    letter-spacing:0.5px;
+  }
+  .preview-card-num{
+    font-family:'Space Mono', monospace;
+    font-size:clamp(8px, 1.2vw, 10px);
+    color:#8a8270;
+  }
+  .preview-grid{
+    flex:1;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:2%;
+  }
+  .preview-cell{
+    border:1px solid #c9c2ab;
+    border-radius:5px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:clamp(11px, 2.4vw, 19px);
+    background:#faf8f2;
+  }
+  .preview-cell.free{
+    background:#d4a73d;
+    color:#fff;
+    font-size:clamp(7px, 1.2vw, 9px);
+    font-family:'Nunito Sans', sans-serif;
+    text-align:center;
+    line-height:1.1;
+  }
+  .preview-divider{
+    border-top:2px dashed #c9c2ab;
+    text-align:center;
+    position:relative;
+    height:0;
+  }
+  .preview-divider span{
+    position:relative;
+    top:-7px;
+    background:#fff;
+    padding:0 10px;
+    font-family:'Space Mono', monospace;
+    font-size:8px;
+    color:#a39c89;
+    letter-spacing:1px;
+  }
+
+  .nav-dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin-bottom:20px;
+  }
+  .nav-dots button{
+    width:9px;height:9px;
+    border-radius:50%;
+    border:none;
+    background: rgba(255,255,255,0.25);
+    cursor:pointer;
+    padding:0;
+  }
+  .nav-dots button.active{ background: var(--gold); }
+
+  footer{
+    text-align:center;
+    font-size:12px;
+    color: rgba(244,241,232,0.45);
+    margin-top:40px;
+  }
+
+  .sr-only{ position:absolute; width:1px;height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+  /* focus visibility */
+  button:focus-visible{
+    outline:3px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .die.rolling{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="version-badge">v1.1.0</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">⚀ ⚁ ⚂ digital dice included</div>
+    <h1>Times Tables <span class="x">×</span> Bingo Builder</h1>
+    <p>Pick the tables to practise, generate fresh printable cards, and roll 2d12 right here to call the game — no physical dice required.</p>
+  </header>
+
+  <div class="layout">
+
+    <!-- LEFT: Controls -->
+    <div class="panel">
+      <h2>📐 Choose tables</h2>
+      <p class="panel-sub">Products will only come from the tables you select. Tap a number to toggle it.</p>
+
+      <div class="table-grid" id="tableGrid"></div>
+
+      <div class="preset-row">
+        <button class="preset-btn" data-preset="all">All 1–12</button>
+        <button class="preset-btn" data-preset="difficult">Difficult (6,7,8,9,12)</button>
+        <button class="preset-btn" data-preset="easy">Easy (1,2,5,10)</button>
+        <button class="preset-btn" data-preset="none">Clear</button>
+      </div>
+
+      <hr class="divider">
+
+      <h2>🎲 Card options</h2>
+      <p class="panel-sub">Each build makes 2 unique cards, ready for one A4 sheet.</p>
+
+      <div class="option-row">
+        <label>Grid size</label>
+        <div class="option-controls" id="gridSizeControls">
+          <button class="seg-btn" data-grid="3">3×3</button>
+          <button class="seg-btn" data-grid="4">4×4</button>
+          <button class="seg-btn active" data-grid="5">5×5</button>
+        </div>
+      </div>
+
+      <div class="option-row">
+        <label>Free centre space</label>
+        <div class="option-controls" id="freeSpaceControls">
+          <button class="seg-btn active" data-free="yes">On</button>
+          <button class="seg-btn" data-free="no">Off</button>
+        </div>
+      </div>
+
+      <div class="count-stat" id="poolStat"></div>
+
+      <button class="generate-btn" id="generateBtn">Build 2 New Cards</button>
+
+      <button class="generate-btn" id="pdfBtn" style="margin-top:10px; background:var(--chalk-green); box-shadow:0 6px 0 var(--chalk-green-dark);">⬇ Download Printable PDF</button>
+      <div class="pdf-status" id="pdfStatus"></div>
+    </div>
+
+    <!-- RIGHT: Dice roller -->
+    <div class="panel dice-panel">
+      <h2 style="justify-content:center;">🎲 Equation Roller</h2>
+      <p class="panel-sub">Rolls 2d12 and multiplies them — perfect for calling the game live.</p>
+
+      <div class="dice-stage">
+        <div class="die-wrap"><div class="die" id="die1">1</div><div class="label">DIE A</div></div>
+        <div class="die-wrap"><div class="die" id="die2">1</div><div class="label">DIE B</div></div>
+      </div>
+
+      <div class="equation-display" id="equationDisplay">
+        <span id="d1">–</span><span class="op">×</span><span id="d2">–</span><span class="eq">=</span><span class="product" id="product">–</span>
+      </div>
+
+      <div class="roll-controls">
+        <button class="roll-btn" id="rollBtn">🎲 Roll the Dice</button>
+        <button class="reveal-btn" id="revealBtn">Hide Product</button>
+      </div>
+
+      <div class="roll-log" id="rollLog">
+        <div class="empty">Roll history will appear here…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-section">
+    <h2>📋 Live Preview</h2>
+    <p class="panel-sub">This is exactly what prints on your A4 sheet.</p>
+
+    <div class="preview-sheet" id="previewSheet"></div>
+
+  </div>
+
+  <footer>Built for times-table practice · all numbers generated fresh in your browser</footer>
+
+</div>
+
+<script>
+/* ============== STATE ============== */
+let selectedTables = new Set([1,2,3,4,5,6,7,8,9,10,11,12]);
+let gridSize = 5;
+let freeSpaceOn = true;
+let currentCards = [null, null]; // each: {nums:[], gridSize, freeSpaceOn}
+let rollHistory = [];
+let productHidden = false;
+
+/* ============== TABLE GRID BUILD ============== */
+const tableGrid = document.getElementById('tableGrid');
+for(let i=1;i<=12;i++){
+  const btn = document.createElement('button');
+  btn.className = 'table-btn active';
+  btn.textContent = i + '×';
+  btn.dataset.table = i;
+  btn.addEventListener('click', () => {
+    if(selectedTables.has(i)){
+      selectedTables.delete(i);
+      btn.classList.remove('active');
+    } else {
+      selectedTables.add(i);
+      btn.classList.add('active');
+    }
+    updatePoolStat();
+  });
+  tableGrid.appendChild(btn);
+}
+
+function setTables(set){
+  selectedTables = new Set(set);
+  document.querySelectorAll('.table-btn').forEach(btn => {
+    const n = parseInt(btn.dataset.table);
+    btn.classList.toggle('active', selectedTables.has(n));
+  });
+  updatePoolStat();
+}
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const p = btn.dataset.preset;
+    if(p === 'all') setTables([1,2,3,4,5,6,7,8,9,10,11,12]);
+    else if(p === 'difficult') setTables([6,7,8,9,12]);
+    else if(p === 'easy') setTables([1,2,5,10]);
+    else if(p === 'none') setTables([]);
+  });
+});
+
+/* ============== GRID SIZE / FREE SPACE TOGGLES ============== */
+document.querySelectorAll('#gridSizeControls .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#gridSizeControls .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    gridSize = parseInt(btn.dataset.grid);
+    updatePoolStat();
+  });
+});
+document.querySelectorAll('#freeSpaceControls .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#freeSpaceControls .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    freeSpaceOn = btn.dataset.free === 'yes';
+    updatePoolStat();
+  });
+});
+
+/* ============== POOL CALC ============== */
+function getProductPool(){
+  const tables = Array.from(selectedTables);
+  const pool = new Set();
+  for(const a of tables){
+    for(let b=1;b<=12;b++){
+      pool.add(a*b);
+    }
+  }
+  return Array.from(pool).sort((a,b)=>a-b);
+}
+
+function cellsNeeded(){
+  const total = gridSize*gridSize;
+  return freeSpaceOn ? total - 1 : total;
+}
+
+function updatePoolStat(){
+  const pool = getProductPool();
+  const needed = cellsNeeded();
+  const stat = document.getElementById('poolStat');
+  const genBtn = document.getElementById('generateBtn');
+  if(selectedTables.size === 0){
+    stat.innerHTML = `<span class="warn">⚠ Select at least one table.</span>`;
+    genBtn.disabled = true;
+    return;
+  }
+  if(pool.length < needed){
+    stat.innerHTML = `<strong>${pool.length}</strong> unique products available — <span class="warn">need ${needed}. Select more tables or shrink the grid.</span>`;
+    genBtn.disabled = true;
+  } else {
+    stat.innerHTML = `<strong>${pool.length}</strong> unique products available · need <strong>${needed}</strong> per card.`;
+    genBtn.disabled = false;
+  }
+}
+
+/* ============== CARD GENERATION ============== */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function buildTwoCards(){
+  const pool = getProductPool();
+  const needed = cellsNeeded();
+  if(pool.length < needed) return;
+
+  // Try to keep the two cards on a sheet distinct from each other too
+  const shuffledPool = shuffle(pool);
+  const cardA = shuffledPool.slice(0, needed);
+  let remaining = shuffledPool.slice(needed).concat(shuffledPool.slice(0, needed));
+  remaining = shuffle(remaining.filter((v,i,self)=>self.indexOf(v)===i));
+  const cardB = remaining.length >= needed ? remaining.slice(0, needed) : shuffle(pool).slice(0, needed);
+
+  currentCards = [
+    { nums: shuffle(cardA), gridSize, freeSpaceOn },
+    { nums: shuffle(cardB), gridSize, freeSpaceOn }
+  ];
+  renderPreview();
+}
+
+document.getElementById('generateBtn').addEventListener('click', buildTwoCards);
+
+/* ============== PREVIEW RENDER ============== */
+function renderCardHTML(card, cardNumber){
+  if(!card){
+    return `<div class="preview-card" style="align-items:center;justify-content:center;color:#a39c89;font-family:'Nunito Sans',sans-serif;">Click "Build 2 New Cards" to generate</div>`;
+  }
+  const size = card.gridSize;
+  const total = size*size;
+  const midIndex = card.freeSpaceOn ? Math.floor(total/2) : -1;
+  let n = 0;
+  let cells = '';
+  for(let i=0;i<total;i++){
+    if(i === midIndex){
+      cells += `<div class="preview-cell free">FREE</div>`;
+    } else {
+      cells += `<div class="preview-cell">${card.nums[n]}</div>`;
+      n++;
+    }
+  }
+  return `
+    <div class="preview-card">
+      <div class="preview-card-header">
+        <span class="preview-card-title">TIMES TABLES BINGO</span>
+        <span class="preview-card-num">Card #${cardNumber}</span>
+      </div>
+      <div class="preview-grid" style="grid-template-columns:repeat(${size},1fr);">${cells}</div>
+    </div>`;
+}
+
+function renderPreview(){
+  const sheet = document.getElementById('previewSheet');
+  sheet.innerHTML = `
+    ${renderCardHTML(currentCards[0], 1)}
+    <div class="preview-divider"><span>✂ CUT HERE ✂</span></div>
+    ${renderCardHTML(currentCards[1], 2)}
+  `;
+}
+renderPreview();
+updatePoolStat();
+
+/* ============== DICE ROLLER ============== */
+const die1 = document.getElementById('die1');
+const die2 = document.getElementById('die2');
+const d1Label = document.getElementById('d1');
+const d2Label = document.getElementById('d2');
+const productLabel = document.getElementById('product');
+const rollLog = document.getElementById('rollLog');
+
+function rollDie(){ return Math.floor(Math.random()*12)+1; }
+
+document.getElementById('rollBtn').addEventListener('click', () => {
+  const a = rollDie();
+  const b = rollDie();
+  const product = a*b;
+
+  die1.classList.remove('rolling'); die2.classList.remove('rolling');
+  void die1.offsetWidth; void die2.offsetWidth; // restart animation
+  die1.classList.add('rolling'); die2.classList.add('rolling');
+
+  die1.textContent = a;
+  die2.textContent = b;
+  d1Label.textContent = a;
+  d2Label.textContent = b;
+  productLabel.textContent = product;
+  productLabel.classList.toggle('hidden', productHidden);
+
+  rollHistory.unshift({a,b,product});
+  if(rollHistory.length > 20) rollHistory.pop();
+  renderRollLog();
+});
+
+document.getElementById('revealBtn').addEventListener('click', (e) => {
+  productHidden = !productHidden;
+  e.target.textContent = productHidden ? 'Show Product' : 'Hide Product';
+  productLabel.classList.toggle('hidden', productHidden);
+});
+
+function renderRollLog(){
+  if(rollHistory.length === 0){
+    rollLog.innerHTML = `<div class="empty">Roll history will appear here…</div>`;
+    return;
+  }
+  rollLog.innerHTML = rollHistory.map((r,idx) =>
+    `<div class="entry">#${rollHistory.length-idx} &nbsp; ${r.a} × ${r.b} = <strong>${r.product}</strong></div>`
+  ).join('');
+}
+
+/* ============== PDF EXPORT ============== */
+document.getElementById('pdfBtn').addEventListener('click', () => {
+  const status = document.getElementById('pdfStatus');
+
+  if(!currentCards[0] || !currentCards[1]){
+    status.textContent = '⚠ Build your cards first, then download.';
+    return;
+  }
+
+  status.textContent = 'Generating PDF…';
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+
+  const pageW = 210, pageH = 297;
+  const margin = 10;
+  const cardH = (pageH - margin*2 - 10) / 2; // 10mm gap for cut line
+  const cardW = pageW - margin*2;
+
+  function drawCard(card, cardNumber, yStart){
+    const x0 = margin, y0 = yStart;
+    const pad = 6;
+
+    // border
+    doc.setDrawColor(31,38,42);
+    doc.setLineWidth(1.1);
+    doc.roundedRect(x0, y0, cardW, cardH, 3, 3);
+
+    // header
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(15);
+    doc.setTextColor(31,61,46);
+    doc.text('TIMES TABLES BINGO', x0+pad, y0+pad+5);
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(120,113,97);
+    doc.text('Mark the product when called', x0+pad, y0+pad+10);
+
+    doc.setFont('courier','bold');
+    doc.setFontSize(9);
+    doc.text('Card #'+cardNumber, x0+cardW-pad-18, y0+pad+5);
+
+    // grid
+    const size = card.gridSize;
+    const total = size*size;
+    const midIndex = card.freeSpaceOn ? Math.floor(total/2) : -1;
+    const gridTop = y0+pad+14;
+    const gridH = cardH - pad*2 - 14;
+    const gridW = cardW - pad*2;
+    const gap = 1.5;
+    const cellW = (gridW - gap*(size-1))/size;
+    const cellH = (gridH - gap*(size-1))/size;
+
+    let n = 0;
+    for(let i=0;i<total;i++){
+      const row = Math.floor(i/size);
+      const col = i % size;
+      const cx = x0+pad + col*(cellW+gap);
+      const cy = gridTop + row*(cellH+gap);
+
+      // All cells: white fill, black outline — no colour ink used
+      doc.setFillColor(255,255,255);
+      doc.setDrawColor(60,60,60);
+      doc.setLineWidth(i === midIndex ? 0.7 : 0.35);
+      doc.roundedRect(cx, cy, cellW, cellH, 1.2, 1.2, 'FD');
+
+      if(i === midIndex){
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(40,40,40);
+        doc.text('FREE', cx+cellW/2, cy+cellH/2+1, {align:'center'});
+        // small corner ticks instead of colour fill, to distinguish at a glance
+        const tick = Math.min(cellW, cellH) * 0.12;
+        doc.setLineWidth(0.5);
+        [[cx+1,cy+1,1,1],[cx+cellW-1,cy+1,-1,1],[cx+1,cy+cellH-1,1,-1],[cx+cellW-1,cy+cellH-1,-1,-1]].forEach(([px,py,dx,dy])=>{
+          doc.line(px, py, px+dx*tick, py);
+          doc.line(px, py, px, py+dy*tick);
+        });
+      } else {
+        const val = card.nums[n]; n++;
+        doc.setFont('courier','bold');
+        doc.setFontSize(Math.min(15, 60/size));
+        doc.setTextColor(20,20,20);
+        doc.text(String(val), cx+cellW/2, cy+cellH/2+2, {align:'center'});
+      }
+    }
+  }
+
+  drawCard(currentCards[0], 1, margin);
+  drawCard(currentCards[1], 2, margin + cardH + 10);
+
+  // cut line
+  doc.setLineDashPattern([2,2], 0);
+  doc.setDrawColor(150,150,150);
+  doc.line(margin, margin+cardH+5, pageW-margin, margin+cardH+5);
+
+  doc.save('times-tables-bingo.pdf');
+  status.textContent = '✓ PDF downloaded — print at A4, no scaling.';
+  setTimeout(()=>{ status.textContent=''; }, 4000);
+});
+
+</script>
+</body>
+</html>
