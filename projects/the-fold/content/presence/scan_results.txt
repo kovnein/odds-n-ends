@@ -1,0 +1,55 @@
+You run a deep scan.
+
+INITIATING FULL SPECTRUM ANALYSIS...
+
+The scanner works for longer than it should.
+Processing. Calculating. Recalculating.
+
+[Press Enter...]
+
+RESULTS:
+
+VESSEL CONFIGURATION: Exact match to your ship
+HULL SIGNATURE: Exact match to your ship
+ENERGY PROFILE: Exact match to your ship
+TEMPORAL SIGNATURE: ...
+
+[Press Enter...]
+
+TEMPORAL SIGNATURE: Origin point matches yours
+PILOT BIOSIGNATURE: Exact match
+DNA SCAN: Exact match (100.00%)
+IDENTITY CONFIRMED: [Your name]
+
+ANOMALY: Subject claims to be pilot
+ANOMALY: Pilot is currently scanning subject
+CONCLUSION: Temporal paradox detected
+
+[Press Enter...]
+
+The scanner summarizes:
+
+IDENTITY: You
+STATUS: Also scanning you
+POSITION: Outside your ship / Inside your ship / Both
+TIME: Now / Then / Always
+
+RECOMMENDATION: Accept paradox as navigation feature
+
+[Press Enter...]
+
+You look at the scan results.
+
+Then at the ship outside.
+
+Then at yourself, reflected in the console screen.
+
+The ship outside is you.
+
+The ship outside IS you.
+
+Not metaphorically.
+
+Literally.
+
+You're scanning yourself across time.

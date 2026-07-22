@@ -1,0 +1,32 @@
+You bring up external camera feeds.
+A compromise: you're not looking directly at the Fold,
+but you're not ignoring what's happening either.
+
+[Press Enter...]
+
+CAMERA 1 (Forward): Fold geometry, nominal distortion
+CAMERA 2 (Starboard): Fold geometry, nominal distortion
+CAMERA 3 (Port): Fold geometry, nominal distortion
+CAMERA 4 (Aft): ...
+
+[Press Enter...]
+
+CAMERA 4 (Aft): CONTACT DETECTED
+
+There's something behind you.
+
+You zoom in. Enhance image.
+
+It's a ship. Your ship.
+The camera is showing your own ship behind you.
+
+But you're in your ship.
+
+[Press Enter...]
+
+You check the instruments.
+
+CONTACTS: 0
+
+The instruments insist you're alone.
+The cameras show you're surrounded.

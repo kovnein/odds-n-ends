@@ -1,0 +1,6 @@
+You check external sensors.
+
+HULL INTEGRITY: 100%
+EXTERNAL CONTACTS: 0
+
+But the scraping continues.
