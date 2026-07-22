@@ -61,8 +61,8 @@ const PROJECTS = [
     lang: "python",
     status: "live",
     repo: "https://github.com/kovnein/unspace-journey-adventure",
-    demo: "https://kovnein.github.io/projects/the-fold/index.html",
-    tags: ["single-file", "game"]
+    demo: "https://kovnein.github.io/odds-n-ends/projects/the-fold/index.html",
+    tags: ["multi-file", "game"]
   },
 
   {
