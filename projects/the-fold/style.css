@@ -1,0 +1,276 @@
+/* ============================================
+   THE FOLD — WEB DEMO STYLES
+
+   Design concept: cold instrument chrome (monospace)
+   framing literary narrative prose (serif) — the ship's
+   telemetry vs. the found manuscript inside it.
+   ============================================ */
+
+:root {
+  --void: #0a0e14;
+  --panel: #0d131b;
+  --panel-line: #1c2733;
+  --text-main: #d8d8d3;
+  --text-dim: #7d99a0;
+  --text-faint: #445157;
+  --accent-amber: #e3a94a;
+  --accent-violet: #9086d9;
+  --danger: #cf5468;
+
+  --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse at top, rgba(144, 134, 217, 0.05), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(227, 169, 74, 0.03), transparent 55%);
+  color: var(--text-main);
+  font-family: var(--mono);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(0px, 3vw, 32px);
+}
+
+.console {
+  width: 100%;
+  max-width: 860px;
+  aspect-ratio: 4 / 3.15;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 40px 80px -30px rgba(0,0,0,0.8);
+}
+
+/* ---------- status bar ---------- */
+
+.status-bar {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--panel-line);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+}
+
+.status-left, .status-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-label {
+  color: var(--accent-amber);
+  font-weight: 700;
+}
+
+.status-sep {
+  color: var(--text-faint);
+}
+
+.chronometer {
+  color: var(--accent-violet);
+  min-width: 6.5ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- output ---------- */
+
+.output {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 28px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  scroll-behavior: smooth;
+}
+
+.output::-webkit-scrollbar {
+  width: 8px;
+}
+.output::-webkit-scrollbar-thumb {
+  background: var(--panel-line);
+}
+.output::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.story-block {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  color: var(--text-main);
+  letter-spacing: 0.01em;
+}
+
+.chrome-header {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-amber);
+  white-space: pre-wrap;
+  border-left: 2px solid var(--accent-amber);
+  padding-left: 12px;
+  animation: rise 260ms ease-out;
+}
+
+.chrome-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--panel-line), transparent 80%);
+  margin: 4px 0;
+}
+
+/* ---------- terminal cursor ---------- */
+/* Lives inline at the point text is currently printing. Solid and
+   steady while a line is being typed out; blinks once printing stops
+   (waiting on the player, or idle after finishing a block). */
+
+.cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 1px;
+  background: var(--text-main);
+  vertical-align: text-bottom;
+  transform: translateY(0.1em);
+}
+
+.cursor.cursor-typing {
+  opacity: 1;
+  animation: none;
+}
+
+.cursor.cursor-idle {
+  animation: cursor-blink 1s steps(1, end) infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrome-header {
+    animation: none;
+  }
+  .cursor.cursor-idle {
+    animation: none;
+    opacity: 1;
+  }
+  .output {
+    scroll-behavior: auto;
+  }
+}
+
+/* ---------- controls ---------- */
+
+.controls {
+  flex: none;
+  border-top: 1px solid var(--panel-line);
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 64px;
+  background: linear-gradient(0deg, rgba(255,255,255,0.02), transparent);
+}
+
+.choice-prompt {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+
+.btn {
+  font-family: var(--mono);
+  font-size: 14px;
+  text-align: left;
+  color: var(--text-main);
+  background: transparent;
+  border: 1px solid var(--panel-line);
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.btn:hover {
+  border-color: var(--accent-amber);
+  background: rgba(227, 169, 74, 0.06);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent-violet);
+  outline-offset: 2px;
+}
+
+.btn-choice .choice-index {
+  display: inline-block;
+  color: var(--accent-amber);
+  margin-right: 8px;
+  min-width: 1.2em;
+}
+
+.btn-continue {
+  align-self: flex-start;
+  color: var(--accent-violet);
+  border-color: var(--panel-line);
+}
+
+.btn-continue:hover {
+  border-color: var(--accent-violet);
+  background: rgba(144, 134, 217, 0.08);
+}
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 480px) {
+  body {
+    padding: 0;
+  }
+  .console {
+    aspect-ratio: auto;
+    height: 100vh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+  }
+  .output {
+    padding: 20px 16px;
+  }
+  .story-block {
+    font-size: 16px;
+  }
+}

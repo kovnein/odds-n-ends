@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Fold — Temporal Loop Horror</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="console">
+
+    <header class="status-bar">
+      <div class="status-left">
+        <span class="status-label">THE FOLD</span>
+        <span class="status-sep">/</span>
+        <span id="status-chapter">CHAPTER 1</span>
+      </div>
+      <div class="status-right">
+        <span id="status-endings">ENDINGS 0/10</span>
+        <span class="status-sep">/</span>
+        <span id="chronometer" class="chronometer">00:00:00</span>
+      </div>
+    </header>
+
+    <main id="output" class="output" aria-live="polite"></main>
+
+    <footer id="controls" class="controls"></footer>
+
+  </div>
+
+  <script src="content.js"></script>
+  <script src="engine.js"></script>
+  <script src="main.js"></script>
+  <script>
+    // Signature detail: the chronometer never settles on one truthful reading.
+    // Small, quiet nod to the Fold's temporal non-linearity — not meant to
+    // distract from the actual game.
+    (function () {
+      const el = document.getElementById('chronometer');
+      const readings = ['00:00:00', '03:47:12', '01:00:00', 'ERROR', '00:15:03'];
+      let i = 0;
+      setInterval(() => {
+        i = (i + 1) % readings.length;
+        el.textContent = readings[i];
+      }, 3200);
+    })();
+  </script>
+</body>
+</html>

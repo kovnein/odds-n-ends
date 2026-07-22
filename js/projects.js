@@ -52,7 +52,17 @@ const PROJECTS = [
     status: "live",
     repo: "",
     demo: "https://kovnein.github.io/odds-n-ends/projects/wordle-emoji-swap.html",
-    tags: ["single-file", "jsPDF"]
+    tags: ["single-file", "wordle"]
+  },
+
+  {
+    title: "The Fold - Temporal Loop Horror",
+    description: "A narrative text adventure. Web porting in progress. Original game written in python",
+    lang: "python",
+    status: "live",
+    repo: "https://github.com/kovnein/unspace-journey-adventure",
+    demo: "https://kovnein.github.io/projects/the-fold/index",
+    tags: ["single-file", "game"]
   },
 
   {
