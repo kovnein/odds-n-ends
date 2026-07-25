@@ -1,0 +1,10 @@
+You pull your hand away from the control.
+
+No.
+
+You've done this enough times. {prev_count} crossings. {prev_count} times
+experiencing... whatever that is.
+
+The mission can wait. The cargo can wait. Proxima can wait.
+
+You're not going back in there.

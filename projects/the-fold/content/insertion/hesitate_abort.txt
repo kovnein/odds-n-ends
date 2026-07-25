@@ -1,0 +1,2 @@
+You kill the insertion sequence.
+The ship drifts at the insertion point, not crossing.

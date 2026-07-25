@@ -32,6 +32,127 @@ const SCENES = {
         next: 'first_hour'
       }
     ],
+    conditional_options: [
+      {
+        text: 'Hesitate (NEW)',
+        condition: () => gameState.chapter >= 2,
+        flag: 'hesitating',
+        next: 'insertion_hesitate'
+      },
+      {
+        text: 'Read the handbook first (NEW)',
+        condition: () => gameState.chapter >= 2,
+        flag: 'reading_handbook',
+        next: 'insertion_handbook'
+      },
+      {
+        text: 'Check the emergency eject system (NEW)',
+        condition: () => gameState.chapter >= 3,
+        flag: 'checking_eject',
+        next: 'insertion_check_eject'
+      },
+      {
+        text: 'Refuse to cross (NEW)',
+        condition: () => gameState.chapter >= 4,
+        flag: 'refused_crossing',
+        permanent_flag: 'ever_refused',
+        response: 'insertion/refuse_response.txt',
+        next: 'ending' // Refused ending
+      }
+    ]
+  },
+
+  insertion_hesitate: {
+    use_visit_count: false,
+    content_files: {
+      1: 'insertion/hesitate_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Proceed with insertion',
+        flag: 'hesitated',
+        response: 'insertion/hesitate_proceed.txt',
+        next: 'first_hour'
+      },
+      {
+        text: 'Abort the crossing',
+        flag: 'refused_crossing',
+        response: 'insertion/hesitate_abort.txt',
+        next: 'ending' // Refused ending
+      }
+    ],
+    conditional_options: []
+  },
+
+  insertion_handbook: {
+    use_visit_count: false,
+    content_files: {
+      1: 'insertion/handbook_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Close the handbook and proceed',
+        flag: 'read_handbook_section_7',
+        permanent_flag: 'read_handbook_section_7',
+        response: 'insertion/proceed_normal.txt', // NB: this file doesn't exist in the
+                                                     // source project either - loadText's
+                                                     // graceful [Missing content] fallback
+                                                     // fires here, faithfully matching the
+                                                     // original Python behavior
+        next: 'first_hour'
+      },
+      {
+        text: 'Keep reading',
+        flag: 'reading_deeper',
+        next: 'insertion_handbook_deep'
+      }
+    ],
+    conditional_options: []
+  },
+
+  insertion_handbook_deep: {
+    use_visit_count: false,
+    content_files: {
+      1: 'insertion/handbook_deep.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'knows_retention_rates',
+        permanent_flag: 'knows_retention_rates',
+        response: 'insertion/handbook_close.txt',
+        next: 'first_hour'
+      }
+    ],
+    conditional_options: []
+  },
+
+  insertion_check_eject: {
+    use_visit_count: false,
+    content_files: {
+      1: 'insertion/check_eject_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Leave it alone and proceed with crossing',
+        flag: 'eject_ready',
+        response: 'insertion/eject_leave.txt',
+        next: 'first_hour'
+      },
+      {
+        text: 'Disengage the safety (just in case)',
+        flag: 'eject_safety_off',
+        response: 'insertion/eject_disengage.txt',
+        next: 'first_hour'
+      },
+      {
+        text: 'Pull it now',
+        flag: 'ejected_pre_crossing',
+        permanent_flag: 'ejected_before',
+        response: 'insertion/eject_pull.txt',
+        next: 'ending' // Ejection ending
+      }
+    ],
     conditional_options: []
   },
 

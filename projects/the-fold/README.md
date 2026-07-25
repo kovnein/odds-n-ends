@@ -5,15 +5,45 @@ straight into GitHub Pages with no build step.
 
 ## Current scope
 
-**All ten endings are now reachable**, including both true endings.
-Navigation by Nightmare — the last one — turned out not to need the Echo
-Chamber at all: First Hour's "Navigate by impossibility" option (chapter
-6+, 3+ endings already seen) routes straight to it. First Hour is now
-fully built out: Investigate (→ The Presence), Use Memory (chapter 3+,
-unlocks once you've seen at least one ending — offers a shortcut back into
-Instruments/Instinct/Investigate plus two further conditional options of
-its own), and the emergency-return-anyway option (unlocked after learning
-returns are a trap, from a Regression ending).
+**All ten endings are now reachable**, including both true endings, and
+the Insertion scene is fully built out — Hesitate, Read the Handbook (with
+a deeper "keep reading" branch), Check the Emergency Eject, and Refuse to
+Cross are all live, unlocking the last two previously-unreachable endings:
+**Refused** and **Ejection**.
+
+Navigation by Nightmare — the final "true" ending — turned out not to need
+the Echo Chamber at all: First Hour's "Navigate by impossibility" option
+(chapter 6+, 3+ endings already seen) routes straight to it. First Hour is
+fully built out too: Investigate (→ The Presence), Use Memory (chapter 3+,
+unlocks once you've seen at least one ending), and the
+emergency-return-anyway option (unlocked after a Regression ending teaches
+you returns are a trap).
+
+One inherited quirk, ported faithfully rather than silently fixed: the
+Handbook's "Close the handbook and proceed" option references
+`insertion/proceed_normal.txt`, which doesn't exist in the original Python
+project either — it's a pre-existing dangling reference in the source
+`scenes_config.py`. The engine's `[Error loading ...]` fallback (a direct
+port of `load_text()`'s own `except` behavior) fires there and play
+continues normally, exactly as it would running the original CLI game.
+Worth fixing at the source if you want — just wasn't this port's call to
+make unasked.
+
+Every scene above has now been verified with scripted playthroughs against
+the real engine and content files, and every session's new branch has had
+at least one real headless-browser click-through confirming actual
+rendering and content-fetching, not just the underlying logic. Along the
+way this caught two genuine test-harness bugs of my own (stale hardcoded
+option indices once a scene had more conditional options active than
+expected) — fixed by having the test driver resolve choice indices from
+the option text itself rather than trusting a hand-typed number.
+
+The only scene left unported is **the Echo Chamber** — reachable from
+Understanding Mastery's "Access the temporal network" and from First Hour
+Use Memory's own network option, both currently showing the graceful
+fallback message. It doesn't gate any ending on its own (Navigation by
+Nightmare has its shorter route above), so it's now pure depth/flavor
+rather than a blocker to full completion.
 
 Reaching Emergence Protocol for real requires chapter 5+ and 3+ endings
 already seen — i.e. actually playing through several loops, since
