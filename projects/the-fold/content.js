@@ -52,16 +52,108 @@ const SCENES = {
         text: 'Trust your instinct (ignore the instruments)',
         flag: 'trusted_instinct',
         permanent_flag: 'trusted_instinct_before',
-        next: 'instinct_path' // not yet ported - engine will show fallback
+        next: 'instinct_path'
       },
       {
         text: "Investigate the discrepancy (find out what's wrong)",
         flag: 'investigated_anomaly',
         permanent_flag: 'investigated_before',
-        next: 'first_hour_investigate' // not yet ported - engine will show fallback
+        next: 'first_hour_investigate'
+      }
+    ],
+    conditional_options: [
+      {
+        text: "This happened before... (use memory) (NEW)",
+        condition: () => gameState.chapter >= 3 && gameState.endingsSeen.length >= 1,
+        flag: 'using_memory',
+        next: 'first_hour_use_memory'
+      },
+      {
+        text: "Attempt emergency return anyway (you know it won't work) (NEW)",
+        condition: () => hasFlag('knows_return_is_trap') && gameState.chapter >= 2,
+        flag: 'attempted_return_knowing',
+        response: 'first_hour/emergency_return_fail.txt',
+        next: 'ending' // Regression ending
+      },
+      {
+        text: 'Navigate by impossibility (NEW)',
+        condition: () => gameState.chapter >= 6 && gameState.endingsSeen.length >= 3,
+        flag: 'navigating_by_impossibility',
+        permanent_flag: 'mastered_fold_navigation',
+        response: 'first_hour/navigate_impossibility.txt',
+        next: 'ending' // Navigation by Nightmare ending
+      }
+    ]
+  },
+
+  // ============================================
+  // FIRST HOUR - INVESTIGATE
+  // ============================================
+
+  first_hour_investigate: {
+    use_visit_count: false,
+    content_files: {
+      1: 'first_hour/investigate_ch1.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'detected_presence',
+        response: 'first_hour/investigate_closing.txt',
+        next: 'scene_presence'
       }
     ],
     conditional_options: []
+  },
+
+  // ============================================
+  // FIRST HOUR - USE MEMORY
+  // (unlocked chapter 3+ once at least one ending has been seen)
+  // ============================================
+
+  first_hour_use_memory: {
+    use_visit_count: false,
+    content_files: {
+      1: 'first_hour/use_memory_ch3.txt',
+      4: 'first_hour/use_memory_ch4-5.txt',
+      6: 'first_hour/use_memory_ch6plus.txt'
+    },
+    base_options: [
+      {
+        text: 'Trust instruments (you know where this leads)',
+        flag: 'trusted_instruments',
+        permanent_flag: 'trusted_instruments_before',
+        response: 'first_hour/trust_instruments.txt',
+        next: 'instrument_path'
+      },
+      {
+        text: 'Trust instinct (you know where this leads)',
+        flag: 'trusted_instinct',
+        permanent_flag: 'trusted_instinct_before',
+        next: 'instinct_path'
+      },
+      {
+        text: "Investigate anyway (you know what you'll find)",
+        flag: 'investigated_anomaly',
+        permanent_flag: 'investigated_before',
+        next: 'first_hour_investigate'
+      }
+    ],
+    conditional_options: [
+      {
+        text: 'Try something completely different (NEW)',
+        condition: () => gameState.chapter >= 5,
+        flag: 'navigating_by_knowledge',
+        response: 'first_hour/something_different.txt',
+        next: 'scene_understanding'
+      },
+      {
+        text: 'Access the temporal network (NEW)',
+        condition: () => hasFlag('achieved_temporal_coordination') && gameState.endingsSeen.length >= 4,
+        flag: 'accessed_echo_chamber',
+        next: 'scene_echo_chamber' // not yet ported - engine will show fallback
+      }
+    ]
   },
 
   instrument_path: {
@@ -337,7 +429,7 @@ const SCENES = {
         flag: 'understood_dual_truth',
         permanent_flag: 'grasps_fold_logic',
         response: 'instrument_path/dual_truth.txt',
-        next: 'scene_understanding' // not yet ported - engine will show fallback
+        next: 'scene_understanding'
       }
     ]
   },
@@ -468,7 +560,7 @@ const SCENES = {
         text: '[Continue]',
         flag: 'learned_intention',
         permanent_flag: 'knows_trying_to_help',
-        next: 'scene_understanding' // not yet ported - engine will show fallback
+        next: 'scene_understanding'
       }
     ],
     conditional_options: []
@@ -575,7 +667,7 @@ const SCENES = {
         text: '[Continue]',
         flag: 'learned_reflection_intention',
         permanent_flag: 'knows_selves_cooperate',
-        next: 'scene_understanding' // not yet ported - engine will show fallback
+        next: 'scene_understanding'
       }
     ],
     conditional_options: []
@@ -591,7 +683,126 @@ const SCENES = {
         text: '[Continue]',
         flag: 'learned_temporal_mechanics',
         permanent_flag: 'understands_fold_time',
-        next: 'scene_understanding' // not yet ported - engine will show fallback
+        next: 'scene_understanding'
+      }
+    ],
+    conditional_options: []
+  },
+
+  // ============================================
+  // UNDERSTANDING
+  // (reached from Presence's "Ask what it wants", Reflection's
+  // "Ask what they want" / "Ask how this is possible", and eventually
+  // the chapter 3+ dual-truth camera option)
+  // ============================================
+
+  scene_understanding: {
+    use_visit_count: true,
+    content_files: {
+      1: 'understanding/main_visit1.txt'
+    },
+    base_options: [
+      {
+        text: "Accept what you've learned",
+        flag: 'accepted_truth',
+        permanent_flag: 'understands_fold_nature',
+        next: 'understanding_acceptance'
+      },
+      {
+        text: "Reject this (it can't be true)",
+        flag: 'rejected_truth',
+        next: 'understanding_rejection'
+      },
+      {
+        text: 'This changes everything',
+        flag: 'transformed_by_truth',
+        next: 'understanding_transformation'
+      }
+    ],
+    conditional_options: [
+      {
+        text: 'Use this knowledge to navigate (NEW)',
+        condition: () => gameState.chapter >= 5 && gameState.endingsSeen.length >= 3,
+        flag: 'navigating_by_knowledge',
+        permanent_flag: 'mastered_enlightened_navigation',
+        next: 'understanding_mastery'
+      }
+    ]
+  },
+
+  understanding_acceptance: {
+    use_visit_count: false,
+    content_files: {
+      1: 'understanding/acceptance_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Work with your other selves',
+        flag: 'achieved_cooperation',
+        permanent_flag: 'mastered_temporal_cooperation',
+        next: 'ending' // Emergence Protocol (if requirements met) or falls through
+      },
+      {
+        text: 'Navigate alone but aware',
+        flag: 'solo_enlightened_navigation',
+        next: 'ending' // falls through to Violent Emergence default
+      }
+    ],
+    conditional_options: []
+  },
+
+  understanding_rejection: {
+    use_visit_count: false,
+    content_files: {
+      1: 'understanding/rejection_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Force through despite knowing',
+        flag: 'forced_through_despite_knowledge',
+        next: 'ending' // falls through to Violent Emergence default
+      },
+      {
+        text: 'Return to instruments (safer)',
+        flag: 'retreated_from_truth',
+        next: 'ending' // falls through to Violent Emergence default
+      }
+    ],
+    conditional_options: []
+  },
+
+  understanding_transformation: {
+    use_visit_count: false,
+    content_files: {
+      1: 'understanding/transformation_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Embrace the change',
+        flag: 'transformed_by_fold',
+        permanent_flag: 'accepted_transformation',
+        next: 'ending' // falls through to Violent Emergence default
+      }
+    ],
+    conditional_options: []
+  },
+
+  understanding_mastery: {
+    use_visit_count: false,
+    content_files: {
+      1: 'understanding/mastery_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Navigate by enlightenment',
+        flag: 'achieved_enlightened_navigation',
+        permanent_flag: 'mastered_fold_truth',
+        next: 'ending' // Emergence Protocol or Navigation by Nightmare
+      },
+      {
+        text: 'Access the temporal network',
+        flag: 'accessed_temporal_network',
+        next: 'scene_echo_chamber' // not yet ported - engine will show fallback
       }
     ],
     conditional_options: []

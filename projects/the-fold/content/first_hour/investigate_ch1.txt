@@ -1,0 +1,32 @@
+You need to understand what's causing the discrepancy.
+
+You run full sensor sweeps. Check navigation logs.
+Cross-reference instrument readings with visual data.
+
+The academy trained you for this. Anomaly investigation protocol.
+Identify. Analyze. Resolve.
+
+[Press Enter to continue...]
+
+Sensor sweep complete.
+
+NAVIGATION ARRAY: Course deviation 0.003%
+VISUAL SPECTRUM: Refraction index UNDEFINED
+MASS DETECTOR: ...
+
+[Press Enter...]
+
+MASS DETECTOR: CONTACT
+
+There's something on the sensors.
+
+DISTANCE: 15,000 km
+BEARING: Directly astern
+MASS PROFILE: ...
+
+MASS PROFILE: ERROR - MATCHES YOUR VESSEL
+
+That's... that's not possible.
+You're in your vessel.
+
+It must be a sensor glitch. Fold interference.

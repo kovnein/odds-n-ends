@@ -5,11 +5,30 @@ straight into GitHub Pages with no build step.
 
 ## Current scope
 
-Three major scenes are now live — The Presence, The Reflection, and the
-Instrument Cameras — reachable from multiple entry points, with several
-cross-links between branches (e.g. bailing out of the instinct path drops
-you back into the instrument path; the camera branch loops back into
-Instrument Maintain if you don't trust what you see):
+**All ten endings are now reachable**, including both true endings.
+Navigation by Nightmare — the last one — turned out not to need the Echo
+Chamber at all: First Hour's "Navigate by impossibility" option (chapter
+6+, 3+ endings already seen) routes straight to it. First Hour is now
+fully built out: Investigate (→ The Presence), Use Memory (chapter 3+,
+unlocks once you've seen at least one ending — offers a shortcut back into
+Instruments/Instinct/Investigate plus two further conditional options of
+its own), and the emergency-return-anyway option (unlocked after learning
+returns are a trap, from a Regression ending).
+
+Reaching Emergence Protocol for real requires chapter 5+ and 3+ endings
+already seen — i.e. actually playing through several loops, since
+`endingsSeen` and permanent flags persist across chapters in `gameState`
+exactly like the Python version (only `currentSession` resets each loop).
+This was verified both by scripting a preset multi-loop game state against
+the real engine, and by a real headless-browser run seeding the same state
+and clicking through to confirm the "(NEW)" conditional option actually
+appears in the UI, the ending banner fires, and the post-choice sequence
+renders with real fetched content — not just checked in the abstract.
+
+Seven endings are reachable now: **Consumption, Fragmentation, Dissolution,
+Regression, Compromise, Violent Emergence, and Emergence Protocol** (the
+first of the two "true" endings). The only other ending — Navigation by
+Nightmare — needs the Echo Chamber scene, still unported.
 
 ```
 Insertion → First Hour
@@ -31,15 +50,17 @@ Insertion → First Hour
               ├─ Careful navigation → Compromise
               ├─ Abort the insertion → Regression
               └─ Force through → Violent Emergence
+
+The Presence / The Reflection (reached from several branches above)
+  → "ask what it wants" / "how is this possible" → The Understanding
+        ├─ Accept → work together → Emergence Protocol (ch5+/3 endings)
+        │                        → falls through to Violent Emergence otherwise
+        ├─ Reject → Violent Emergence (default fallback)
+        ├─ Transform → Violent Emergence (default fallback)
+        └─ (NEW, ch5+/3 endings) Use this knowledge → Mastery
+              → Navigate by enlightenment → Emergence Protocol
+              → Access the temporal network → Echo Chamber (not yet ported)
 ```
-
-**The Presence** (from Instrument Glance's emergency maneuvers) branches into
-communicate / observe / evade, with the observe branch splitting further
-into movement-analysis and scan sub-scenes — all funneling into either
-Fragmentation, Consumption, or onward into **The Reflection**.
-
-**The Reflection** (from several entry points above) offers communicate /
-attack / retreat, each reachable from multiple upstream branches.
 
 **Small callback unlock:** after seeing the Consumption ending once, a
 permanent flag (`knows_presence_real`) unlocks a new option — "Accept that
@@ -47,17 +68,19 @@ something is out there" — on Instrument Path in later loops, leading
 straight into The Reflection via a short acceptance scene. This mirrors the
 Python version's cross-loop knowledge persistence.
 
-All six endings so far — **Consumption, Fragmentation, Dissolution,
-Regression, Compromise, Violent Emergence** — are reachable through multiple
-routes now, not just one path each. Every transition above has been verified
-by scripting full playthroughs against the real engine/content files, plus
-a real headless-browser click-through of one branch to confirm rendering
-and content-fetching, not just the underlying logic.
+A note on the Understanding sub-scenes: Reject/Transform's own flags
+(`forced_through_despite_knowledge`, `retreated_from_truth`,
+`transformed_by_fold`) aren't in any ending's condition list in the source
+`endings_config.py` either — they fall through to the same default
+Violent Emergence fallback the Python version uses. That's not a gap
+introduced in this port; it's ported faithfully from the original (noted
+in the Python README's own "Known Issues": *"Some permanent flags set but
+not yet utilized for callback content"*).
 
 Still stubbed with the graceful fallback message: "Investigate the
-discrepancy" from First Hour, and anything past The Understanding scene
-(reached from several `[Continue]` chains above) — the true endings
-(Emergence Protocol, Navigation by Nightmare) live beyond that point.
+discrepancy" from First Hour, and "Access the temporal network" from
+Understanding Mastery (both lead to scenes — First Hour Investigate and
+Echo Chamber — not yet ported).
 
 ## How it maps to the Python source
 

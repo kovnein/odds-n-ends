@@ -268,6 +268,45 @@ async function displayEnding(endingId, ui) {
   const discovered = gameState.endingsSeen.length;
   await ui.appendText(`\n\uD83D\uDCCA Endings discovered: ${discovered}/${total}`);
   ui.updateStatus();
+
+  if (ending.has_post_choice) {
+    await handleEmergenceChoice(ui);
+  }
+}
+
+// ============================================
+// EMERGENCE PROTOCOL POST-CHOICE
+// Mirrors endings.py handle_emergence_choice() - the "rookie reveal"
+// ============================================
+
+async function handleEmergenceChoice(ui) {
+  await ui.appendText('\nYour first crossing.');
+  await ui.appendText('\nYou look at the flight log: CROSSINGS COMPLETED: 1');
+
+  const options = [
+    '"...nominal. All systems nominal."',
+    '"I need to report something."',
+    'Say nothing. Close the channel.'
+  ];
+  const choiceIdx = await ui.getChoice(options);
+
+  let file, flag;
+  if (choiceIdx === 0) {
+    file = 'endings/emergence_submit.txt';
+    flag = 'submitted_to_forgetting';
+  } else if (choiceIdx === 1) {
+    file = 'endings/emergence_resist.txt';
+    flag = 'tried_to_resist_forgetting';
+  } else {
+    file = 'endings/emergence_break.txt';
+    flag = 'chose_death_over_forgetting';
+  }
+
+  const text = await loadText(file, {});
+  ui.appendDivider();
+  await displayText(text, ui);
+  ui.appendDivider();
+  setFlag(flag);
 }
 
 async function getEnding(ui) {
