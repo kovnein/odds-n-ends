@@ -499,6 +499,18 @@
   }
   .use-btn:hover{ filter: brightness(1.08); }
 
+  .reset-btn{
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    padding: 7px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .reset-btn:hover{ border-color: var(--accent); color: var(--accent); }
+
   .textarea-note{
     font-family: 'Courier New', monospace;
     font-size: 11px;
@@ -546,6 +558,7 @@
         <div class="builder-actions">
           <button class="add-guess-btn" id="addGuessBtn" type="button">+ Add guess</button>
           <button class="use-btn" id="useBtn" type="button">Use in transformer ↓</button>
+          <button class="reset-btn" id="resetBtn" type="button">Reset</button>
         </div>
       </div>
 
@@ -642,6 +655,7 @@
   const guessRowsEl = document.getElementById('guessRows');
   const addGuessBtn = document.getElementById('addGuessBtn');
   const useBtn = document.getElementById('useBtn');
+  const resetBtn = document.getElementById('resetBtn');
 
   const MAX_GUESSES = 6;
   const MAX_EXAMPLES = 12;
@@ -763,7 +777,7 @@
 
     const solved = completeGuesses[completeGuesses.length - 1] === answer;
     const attempts = solved ? completeGuesses.length : `${completeGuesses.length}+`;
-    const header = `Scoredle ${attempts}/6  (${FULL_POOL.length.toLocaleString()} → ${pool.length.toLocaleString()})`;
+    const header = `Alvesdle ${attempts}/6  (${FULL_POOL.length.toLocaleString()} → ${pool.length.toLocaleString()})`;
     return [header, '', ...lines].join('\n');
   }
 
@@ -799,14 +813,35 @@
     transform();
   });
 
-  scoredleToggle.addEventListener('change', () => {
+  resetBtn.addEventListener('click', () => {
+    answerWordEl.value = '';
+    guessValues = [''];
+    buildGuessBlocks();
+    updateBuilderOutput();
+    answerHintEl.textContent = `Scored against the full allowable Wordle guess list (${FULL_POOL.length.toLocaleString()} words).`;
+    answerHintEl.style.color = '';
+    if (textareaNote.style.display !== 'none'){
+      inputEl.value = '';
+      transform();
+    }
+  });
+
+  function applyScoredleMode(){
     const on = scoredleToggle.checked;
     builderEl.classList.toggle('active', on);
     pasteHeading.textContent = on ? '2 — Or edit the generated text' : '1 — Paste your Wordle share';
     textareaNote.style.display = on ? 'block' : 'none';
-  });
+  }
+
+  scoredleToggle.addEventListener('change', applyScoredleMode);
 
   buildGuessBlocks();
+  // Some browsers restore a checkbox's checked state on reload/reopen
+  // without firing a change event, which used to leave the toggle
+  // showing "on" while the builder stayed hidden. Syncing once here
+  // (in addition to the change listener) fixes that regardless of how
+  // the page arrived at its current checkbox state.
+  applyScoredleMode();
 
   const PRESETS = [
     { name: 'Hearts',  emojis: ['💚','💛','🤍'] },
