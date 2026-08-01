@@ -272,7 +272,7 @@ const SCENES = {
         text: 'Access the temporal network (NEW)',
         condition: () => hasFlag('achieved_temporal_coordination') && gameState.endingsSeen.length >= 4,
         flag: 'accessed_echo_chamber',
-        next: 'scene_echo_chamber' // not yet ported - engine will show fallback
+        next: 'scene_echo_chamber'
       }
     ]
   },
@@ -332,10 +332,18 @@ const SCENES = {
       {
         text: 'Look at the viewport',
         flag: 'broke_discipline',
-        next: 'instrument_glance' // not yet ported - engine will show fallback
+        next: 'instrument_glance'
       }
     ],
-    conditional_options: []
+    conditional_options: [
+      {
+        text: 'Reach for the eject handle (NEW)',
+        condition: () => hasFlag('ever_ejected'),
+        flag: 'ejected_from_terror',
+        response: 'instrument_path/eject_terror.txt',
+        next: 'ending' // Ejection ending
+      }
+    ]
   },
 
   scene_forced_confrontation: {
@@ -347,7 +355,7 @@ const SCENES = {
       {
         text: 'Turn around (face it)',
         flag: 'faced_presence',
-        next: 'forced_confrontation_face' // not yet ported - engine will show fallback
+        next: 'forced_confrontation_face'
       },
       {
         text: "Keep ignoring it (it's not real)",
@@ -358,6 +366,50 @@ const SCENES = {
         text: 'Attack whatever is there',
         flag: 'attacked_presence_desperately',
         next: 'forced_confrontation_attack'
+      }
+    ],
+    conditional_options: [
+      {
+        text: "Fine. I'll accept it. (NEW)",
+        condition: () => gameState.chapter >= 3,
+        flag: 'finally_accepted_reality',
+        permanent_flag: 'stopped_denying',
+        next: 'forced_confrontation_acceptance'
+      }
+    ]
+  },
+
+  forced_confrontation_face: {
+    use_visit_count: false,
+    content_files: {
+      1: 'forced_confrontation/face_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Try to communicate',
+        flag: 'attempted_communication_after_denial',
+        next: 'scene_reflection'
+      },
+      {
+        text: "This isn't happening",
+        flag: 'broke_from_reality',
+        next: 'ending' // Consumption ending
+      }
+    ],
+    conditional_options: []
+  },
+
+  forced_confrontation_acceptance: {
+    use_visit_count: false,
+    content_files: {
+      1: 'forced_confrontation/acceptance_main.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'accepted_after_denial',
+        permanent_flag: 'learned_to_accept',
+        next: 'scene_understanding'
       }
     ],
     conditional_options: []
@@ -447,6 +499,53 @@ const SCENES = {
         text: 'Maintain control (resist communion)',
         flag: 'resisted_communion',
         next: 'instinct_resist'
+      }
+    ],
+    conditional_options: [
+      {
+        text: "Let it guide you (you've learned to trust it) (NEW)",
+        condition: () => gameState.chapter >= 3 && hasFlag('trusted_instinct_before'),
+        flag: 'guided_by_fold',
+        next: 'instinct_guided'
+      },
+      {
+        text: 'Commune willingly (you know what it wants) (NEW)',
+        condition: () => gameState.chapter >= 5 && hasFlag('accepted_communion'),
+        flag: 'willing_communion',
+        permanent_flag: 'mastered_communion',
+        next: 'instinct_communion'
+      }
+    ]
+  },
+
+  instinct_guided: {
+    use_visit_count: false,
+    content_files: {
+      1: 'instinct_path/guided_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Follow where it leads',
+        flag: 'followed_guidance',
+        permanent_flag: 'trusted_fold_guidance',
+        response: 'instinct_path/follow_guidance.txt',
+        next: 'ending' // Compromise ending
+      }
+    ],
+    conditional_options: []
+  },
+
+  instinct_communion: {
+    use_visit_count: false,
+    content_files: {
+      1: 'instinct_path/communion_main.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'achieved_communion',
+        permanent_flag: 'mastered_fold_navigation',
+        next: 'scene_echo_chamber'
       }
     ],
     conditional_options: []
@@ -606,7 +705,21 @@ const SCENES = {
         next: 'presence_observe'
       }
     ],
-    conditional_options: []
+    conditional_options: [
+      {
+        text: "You're trying to help me (NEW)",
+        condition: () => gameState.chapter >= 3 && hasFlag('knows_presence_real'),
+        flag: 'recognized_presence',
+        permanent_flag: 'understood_presence_nature',
+        next: 'presence_recognition'
+      },
+      {
+        text: 'Reach out willingly (NEW)',
+        condition: () => gameState.chapter >= 5 && hasFlag('understood_presence_nature'),
+        flag: 'willing_contact',
+        next: 'presence_communion'
+      }
+    ]
   },
 
   presence_communicate: {
@@ -719,6 +832,38 @@ const SCENES = {
     conditional_options: []
   },
 
+  presence_recognition: {
+    use_visit_count: false,
+    content_files: {
+      1: 'presence/recognition_main.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'achieved_recognition',
+        permanent_flag: 'spoke_to_self',
+        next: 'scene_reflection'
+      }
+    ],
+    conditional_options: []
+  },
+
+  presence_communion: {
+    use_visit_count: false,
+    content_files: {
+      1: 'presence/communion_main.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'achieved_presence_communion',
+        permanent_flag: 'mastered_presence_contact',
+        next: 'scene_echo_chamber'
+      }
+    ],
+    conditional_options: []
+  },
+
   // ============================================
   // THE REFLECTION
   // (reached from instrument_glance's "Keep looking", instrument_cameras'
@@ -747,6 +892,52 @@ const SCENES = {
         flag: 'retreated_from_reflection',
         response: 'reflection/retreat_response.txt',
         next: 'ending' // Consumption ending
+      }
+    ],
+    conditional_options: [
+      {
+        text: "You're me. From another crossing. (NEW)",
+        condition: () => gameState.chapter >= 2 && hasFlag('knows_its_you'),
+        flag: 'recognized_self',
+        permanent_flag: 'accepted_temporal_self',
+        next: 'reflection_recognition'
+      },
+      {
+        text: 'Reach out (you understand now) (NEW)',
+        condition: () => gameState.chapter >= 4 && hasFlag('accepted_temporal_self'),
+        flag: 'reached_out_willingly',
+        next: 'reflection_cooperation'
+      }
+    ]
+  },
+
+  reflection_recognition: {
+    use_visit_count: false,
+    content_files: {
+      1: 'reflection/recognition_main.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'achieved_reflection_recognition',
+        permanent_flag: 'spoke_with_temporal_self',
+        next: 'scene_understanding'
+      }
+    ],
+    conditional_options: []
+  },
+
+  reflection_cooperation: {
+    use_visit_count: false,
+    content_files: {
+      1: 'reflection/cooperation_main.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'cooperated_with_self',
+        permanent_flag: 'mastered_temporal_cooperation',
+        next: 'scene_understanding'
       }
     ],
     conditional_options: []
@@ -923,7 +1114,149 @@ const SCENES = {
       {
         text: 'Access the temporal network',
         flag: 'accessed_temporal_network',
-        next: 'scene_echo_chamber' // not yet ported - engine will show fallback
+        next: 'scene_echo_chamber'
+      }
+    ],
+    conditional_options: []
+  },
+
+  // ============================================
+  // ECHO CHAMBER
+  // (reached from Understanding Mastery, First Hour Use Memory,
+  // Instinct Communion, and Presence Communion)
+  // ============================================
+
+  scene_echo_chamber: {
+    use_visit_count: true,
+    content_files: {
+      1: 'echo_chamber/main_visit1.txt',
+      2: 'echo_chamber/main_visit2-3.txt',
+      4: 'echo_chamber/main_visit4plus.txt'
+    },
+    base_options: [
+      {
+        text: 'Send a message backward (warn your past self)',
+        flag: 'sent_warning_backward',
+        next: 'echo_chamber_send'
+      },
+      {
+        text: 'Listen for messages forward (receive guidance)',
+        flag: 'listened_for_guidance',
+        next: 'echo_chamber_receive'
+      },
+      {
+        text: 'Connect to all iterations at once',
+        flag: 'opened_full_network',
+        next: 'echo_chamber_network'
+      }
+    ],
+    conditional_options: [
+      {
+        text: 'Close the channel (too much information)',
+        condition: () => gameState.chapter >= 3,
+        flag: 'overwhelmed_by_echoes',
+        next: 'echo_chamber_overwhelmed'
+      },
+      {
+        text: 'Create a bootstrap loop (NEW)',
+        condition: () => gameState.chapter >= 8 && gameState.endingsSeen.length >= 5,
+        flag: 'created_bootstrap_loop',
+        permanent_flag: 'mastered_temporal_communication',
+        next: 'echo_chamber_bootstrap'
+      }
+    ]
+  },
+
+  echo_chamber_send: {
+    use_visit_count: false,
+    content_files: {
+      1: 'echo_chamber/send_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Warn about the danger',
+        flag: 'sent_danger_warning',
+        permanent_flag: 'helped_past_self',
+        next: 'ending' // Compromise or Emergence Protocol
+      },
+      {
+        text: 'Share navigation data',
+        flag: 'shared_navigation_data',
+        permanent_flag: 'improved_collective_knowledge',
+        next: 'ending' // falls through to Violent Emergence default
+      }
+    ],
+    conditional_options: []
+  },
+
+  echo_chamber_receive: {
+    use_visit_count: false,
+    content_files: {
+      1: 'echo_chamber/receive_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Follow the guidance',
+        flag: 'followed_future_guidance',
+        permanent_flag: 'received_temporal_help',
+        next: 'ending' // Compromise ending
+      },
+      {
+        text: 'Ignore it (trust yourself more)',
+        flag: 'ignored_future_self',
+        next: 'ending' // falls through to Violent Emergence default
+      }
+    ],
+    conditional_options: []
+  },
+
+  echo_chamber_network: {
+    use_visit_count: false,
+    content_files: {
+      1: 'echo_chamber/network_main.txt'
+    },
+    base_options: [
+      {
+        text: 'Coordinate all iterations',
+        flag: 'coordinated_all_iterations',
+        permanent_flag: 'achieved_temporal_coordination',
+        next: 'ending' // Emergence Protocol
+      },
+      {
+        text: 'Too much, pull back',
+        flag: 'pulled_back_from_network',
+        next: 'ending' // Compromise ending
+      }
+    ],
+    conditional_options: []
+  },
+
+  echo_chamber_overwhelmed: {
+    use_visit_count: false,
+    content_files: {
+      1: 'echo_chamber/overwhelmed_main.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'lost_in_echoes',
+        next: 'ending' // Dissolution ending
+      }
+    ],
+    conditional_options: []
+  },
+
+  echo_chamber_bootstrap: {
+    use_visit_count: false,
+    content_files: {
+      1: 'echo_chamber/bootstrap_main.txt'
+    },
+    base_options: [
+      {
+        text: '[Continue]',
+        flag: 'achieved_bootstrap_navigation',
+        permanent_flag: 'mastered_causal_loops',
+        next: 'ending' // Navigation by Nightmare ending
       }
     ],
     conditional_options: []

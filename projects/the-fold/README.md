@@ -3,47 +3,44 @@
 A browser port of the CLI game, built as static HTML/CSS/JS so it can drop
 straight into GitHub Pages with no build step.
 
-## Current scope
+## Current scope: full parity with the Python source
 
-**All ten endings are now reachable**, including both true endings, and
-the Insertion scene is fully built out — Hesitate, Read the Handbook (with
-a deeper "keep reading" branch), Check the Emergency Eject, and Refuse to
-Cross are all live, unlocking the last two previously-unreachable endings:
-**Refused** and **Ejection**.
+Every scene and conditional option in `scenes_config.py` is now ported,
+including the deep multi-loop unlocks that only appear after specific
+permanent flags and chapter thresholds are met:
 
-Navigation by Nightmare — the final "true" ending — turned out not to need
-the Echo Chamber at all: First Hour's "Navigate by impossibility" option
-(chapter 6+, 3+ endings already seen) routes straight to it. First Hour is
-fully built out too: Investigate (→ The Presence), Use Memory (chapter 3+,
-unlocks once you've seen at least one ending), and the
-emergency-return-anyway option (unlocked after a Regression ending teaches
-you returns are a trap).
+- **The Echo Chamber** (send / receive / network / overwhelmed / bootstrap)
+  — reachable from Understanding Mastery, First Hour Use Memory, Instinct
+  Communion, and Presence Communion
+- **Reflection's** deeper recognition/cooperation branch (chapter 2+/4+,
+  once you already know "it's you")
+- **Forced Confrontation's** face-it and quiet-acceptance branches
+  (previously only denial/attack were built)
+- **Presence's** recognition/communion branch (chapter 3+/5+, mirrors the
+  Reflection unlock)
+- **Instinct's** guided/communion branch (chapter 3+/5+, once you've
+  trusted instinct before or accepted communion once)
+- **Instrument Maintain's** eject-from-terror option (unlocked after
+  seeing the Ejection ending once)
 
-One inherited quirk, ported faithfully rather than silently fixed: the
-Handbook's "Close the handbook and proceed" option references
-`insertion/proceed_normal.txt`, which doesn't exist in the original Python
-project either — it's a pre-existing dangling reference in the source
-`scenes_config.py`. The engine's `[Error loading ...]` fallback (a direct
-port of `load_text()`'s own `except` behavior) fires there and play
-continues normally, exactly as it would running the original CLI game.
-Worth fixing at the source if you want — just wasn't this port's call to
-make unasked.
+All ten endings are reachable through multiple routes each now. Every new
+branch was verified with scripted playthroughs against the real engine —
+which caught two genuinely subtle, *correct* interactions worth noting
+rather than glossing over: reaching Understanding via "Use this knowledge
+to navigate" sets a flag that's independently one of Emergence Protocol's
+own triggers, and "Ignore it" at Instrument Maintain sets a flag that's
+independently one of Consumption's triggers. Either one, once set, persists
+for the rest of that session and can outrank whatever ending a later choice
+would otherwise produce — session flags don't reset until the loop does,
+exactly like the Python version's `current_session`. A couple of my test
+routes tripped over this and reported false failures until traced back to
+the actual (correct) cause.
 
-Every scene above has now been verified with scripted playthroughs against
-the real engine and content files, and every session's new branch has had
-at least one real headless-browser click-through confirming actual
-rendering and content-fetching, not just the underlying logic. Along the
-way this caught two genuine test-harness bugs of my own (stale hardcoded
-option indices once a scene had more conditional options active than
-expected) — fixed by having the test driver resolve choice indices from
-the option text itself rather than trusting a hand-typed number.
-
-The only scene left unported is **the Echo Chamber** — reachable from
-Understanding Mastery's "Access the temporal network" and from First Hour
-Use Memory's own network option, both currently showing the graceful
-fallback message. It doesn't gate any ending on its own (Navigation by
-Nightmare has its shorter route above), so it's now pure depth/flavor
-rather than a blocker to full completion.
+A real headless-browser run confirmed the deepest unlock chain works
+end-to-end: setting `accepted_communion` unlocks "Commune willingly" on
+Instinct Path → routes into the Echo Chamber → Network sub-scene →
+Compromise ending, with real fetched content and zero JS errors at every
+step.
 
 Reaching Emergence Protocol for real requires chapter 5+ and 3+ endings
 already seen — i.e. actually playing through several loops, since
