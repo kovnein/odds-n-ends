@@ -56,23 +56,23 @@ const PROJECTS = [
   },
 
   {
+    title: "Passphrase Generator",
+    description: "A passphrase generator with multilingual support and built in entropy calculation. Original project written in python.",
+    lang: "html",
+    status: "live",
+    repo: "",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/passphrase-bench.html",
+    tags: ["single-file", "password", "security"]
+  },
+
+  {
     title: "The Fold - Temporal Loop Horror",
-    description: "A narrative text adventure. Web porting in progress. Original game written in python",
+    description: "A narrative text adventure. Original project was written in python.",
     lang: "python",
     status: "live",
     repo: "https://github.com/kovnein/unspace-journey-adventure",
     demo: "https://kovnein.github.io/odds-n-ends/projects/the-fold/index.html",
     tags: ["multi-file", "game"]
-  },
-
-  {
-    title: "EXAMPLE — Python project, no web front-end yet",
-    description: "Delete this card, or use it as your template: a Python project that's finished and on GitHub, but doesn't have a page to click into yet.",
-    lang: "python",
-    status: "standby",
-    repo: "https://github.com/kovnein/",
-    demo: "",
-    tags: ["example", "delete-me"]
   }
 
 ];
