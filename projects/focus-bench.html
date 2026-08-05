@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus Bench</title>
+<style>
+  :root{
+    --bg: #10141a;
+    --panel: #171e26;
+    --panel-2: #1c242e;
+    --border: #2a333d;
+    --border-soft: #232b34;
+    --text: #e7edf2;
+    --text-muted: #7c8a96;
+    --amber: #ffb300;
+    --amber-dim: #7a5c14;
+    --green: #6ee7a0;
+    --green-dim: #2f5940;
+    --red: #ff5c5c;
+    --red-dim: #6b2c2c;
+    --mono: ui-monospace, 'Cascadia Code', 'SFMono-Regular', Consolas, 'Roboto Mono', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(255,179,0,0.04), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(110,231,160,0.04), transparent 40%);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 28px 20px 60px;
+  }
+
+  .wrap{
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-soft);
+    flex-wrap: wrap;
+  }
+
+  header .title-block{
+    display:flex;
+    align-items:baseline;
+    gap: 10px;
+  }
+
+  header h1{
+    font-size: 20px;
+    letter-spacing: 0.14em;
+    margin:0;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  header .subtitle{
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  .status-strip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .status-dot{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--border);
+    box-shadow: none;
+    transition: background .2s, box-shadow .2s;
+  }
+  .status-dot.on-work{ background: var(--amber); box-shadow: 0 0 8px 1px rgba(255,179,0,0.6); }
+  .status-dot.on-break{ background: var(--green); box-shadow: 0 0 8px 1px rgba(110,231,160,0.6); }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 18px;
+  }
+
+  @media (max-width: 760px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    position: relative;
+  }
+
+  .panel-label{
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin: 0 0 14px 0;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel-label::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background: var(--border-soft);
+  }
+
+  /* ---------- Task log ---------- */
+  .task-input-row{
+    display:flex;
+    gap:8px;
+    margin-bottom: 14px;
+  }
+
+  .task-input-row input[type="text"]{
+    flex:1;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    padding: 10px 12px;
+    outline: none;
+  }
+  .task-input-row input[type="text"]:focus{
+    border-color: var(--amber);
+  }
+  .task-input-row input[type="text"]::placeholder{ color: var(--text-muted); }
+
+  .tag-select{
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    padding: 0 8px;
+    outline: none;
+    max-width: 108px;
+  }
+  .tag-select:focus{ border-color: var(--amber); }
+
+  .tag-bar{
+    display:flex;
+    align-items:center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .tag-chip{
+    display:inline-flex;
+    align-items:center;
+    gap: 4px;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 6px 4px 7px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .tag-chip:hover{ border-color: var(--text-muted); color: var(--text); }
+  .tag-chip.active{
+    border-color: var(--text);
+    color: var(--text);
+    background: var(--panel);
+  }
+  .tag-chip .swatch{
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tag-chip .chip-name{ padding: 0 1px; }
+  .tag-chip .tag-move,
+  .tag-chip .tag-del{
+    background:none;
+    border:none;
+    color: inherit;
+    opacity: 0.5;
+    cursor:pointer;
+    font-size: 11px;
+    line-height:1;
+    padding: 1px 2px;
+    border-radius: 3px;
+  }
+  .tag-chip .tag-move:hover{ opacity: 1; background: rgba(255,255,255,0.08); }
+  .tag-chip .tag-move:disabled{ opacity: 0.2; cursor: default; }
+  .tag-chip .tag-move:disabled:hover{ background: none; }
+  .tag-chip .tag-del{ font-size: 13px; }
+  .tag-chip .tag-del:hover{ opacity: 1; color: var(--red); background: rgba(255,92,92,0.1); }
+
+  .tag-add{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    margin-left: 2px;
+    flex-wrap: wrap;
+  }
+
+  .swatch-picker{
+    display:flex;
+    align-items:center;
+    gap: 4px;
+  }
+  .swatch-btn{
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+  }
+  .swatch-btn.selected{
+    border-color: var(--text);
+    transform: scale(1.12);
+  }
+
+  .tag-add input[type="text"]{
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 6px 8px;
+    outline: none;
+    width: 92px;
+  }
+  .tag-add input[type="text"]:focus{ border-color: var(--amber); }
+
+  .tag-preview{
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .tag-preview .tag-del{ display:none; }
+
+  /* ---------- Grouping & tag-change menu ---------- */
+  .group-header{
+    display:flex;
+    align-items:center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 12px 0 6px;
+  }
+  .group-header:first-child{ margin-top: 0; }
+  .group-header .swatch{
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .group-header .count{
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+  .group-header::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background: var(--border-soft);
+  }
+
+  .tag-btn{
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    flex-shrink: 0;
+    cursor: pointer;
+    padding: 0;
+  }
+  .tag-btn.none{
+    border: 1.5px dashed var(--text-muted);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .tag-btn:hover{ border-color: var(--text); }
+
+  .tag-menu{
+    position:absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    left: 30px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px;
+    min-width: 130px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    display:flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tag-menu button{
+    display:flex;
+    align-items:center;
+    gap: 7px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    padding: 6px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .tag-menu button:hover{ background: var(--panel); }
+  .tag-menu .swatch{
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .none-swatch{
+    border: 1.5px dashed var(--text-muted) !important;
+    background: transparent !important;
+  }
+
+  .btn{
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  .btn:hover{ border-color: var(--text-muted); }
+  .btn:focus-visible{ outline: 2px solid var(--amber); outline-offset: 2px; }
+
+  .btn-amber{
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #1a1200;
+  }
+  .btn-amber:hover{ background: #ffc733; border-color: #ffc733; }
+
+  .btn-ghost{
+    background: transparent;
+  }
+
+  .btn-sm{ padding: 6px 10px; font-size: 12px; }
+
+  #taskList{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display:flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .task-item{
+    position: relative;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 9px 10px;
+  }
+
+  .task-item .check{
+    width: 17px; height:17px;
+    border-radius: 4px;
+    border: 1.5px solid var(--text-muted);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .task-item .check.done{
+    background: var(--green);
+    border-color: var(--green);
+    color: #0a1a12;
+  }
+  .task-item .check.done::after{
+    content:'✓';
+    font-size: 12px;
+    line-height:1;
+  }
+
+  .task-item span.label{
+    flex:1;
+    font-size: 13.5px;
+    word-break: break-word;
+  }
+  .task-item.done span.label{
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  .task-item .del{
+    background:none;
+    border:none;
+    color: var(--text-muted);
+    cursor:pointer;
+    font-size: 15px;
+    padding: 2px 6px;
+    line-height:1;
+    border-radius: 4px;
+  }
+  .task-item .del:hover{ color: var(--red); background: rgba(255,92,92,0.1); }
+
+  .empty-state{
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-family: var(--mono);
+    padding: 18px 4px;
+    text-align:center;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+  }
+
+  .task-footer{
+    margin-top: 12px;
+    display:flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- Timer panel ---------- */
+  .mode-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--amber-dim);
+    color: var(--amber);
+    background: rgba(255,179,0,0.06);
+    margin-bottom: 14px;
+  }
+  .mode-tag.break{
+    border-color: var(--green-dim);
+    color: var(--green);
+    background: rgba(110,231,160,0.06);
+  }
+  .mode-tag .dot{
+    width:6px; height:6px; border-radius:50%; background: currentColor;
+  }
+
+  .readout{
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 64px;
+    letter-spacing: 0.04em;
+    text-align:center;
+    padding: 22px 10px;
+    margin-bottom: 16px;
+    background: #0c0f13;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--amber);
+    text-shadow: 0 0 18px rgba(255,179,0,0.35);
+    transition: color .2s, text-shadow .2s;
+    user-select: none;
+  }
+  .readout.break{
+    color: var(--green);
+    text-shadow: 0 0 18px rgba(110,231,160,0.35);
+  }
+  .readout.overtime{
+    color: var(--red);
+    text-shadow: 0 0 18px rgba(255,92,92,0.4);
+  }
+
+  .control-row{
+    display:flex;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .control-row .btn{ flex:1; }
+
+  .field-group{
+    display:flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .field-label{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* toggle switch */
+  .toggle-switch{
+    display:flex;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .toggle-switch button{
+    flex:1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 9px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .toggle-switch button.active{
+    background: var(--amber);
+    color: #1a1200;
+  }
+  .toggle-switch button:not(.active):hover{
+    color: var(--text);
+  }
+
+  .duration-inputs{
+    display:flex;
+    gap: 12px;
+  }
+  .duration-field{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap: 6px;
+  }
+  .duration-field label{
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+  .duration-field input{
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    padding: 9px 10px;
+    width: 100%;
+    outline:none;
+  }
+  .duration-field input:focus{ border-color: var(--amber); }
+
+  .counter-row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .leds{
+    display:flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    max-width: 160px;
+  }
+  .led{
+    width: 10px; height:10px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 1px solid var(--border-soft);
+  }
+  .led.lit{
+    background: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 6px 1px rgba(110,231,160,0.6);
+  }
+
+  .counter-num{
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green);
+    min-width: 28px;
+    text-align:right;
+  }
+
+  .day-reset{
+    display:flex;
+    justify-content:flex-end;
+    margin-top: 12px;
+  }
+
+  footer{
+    max-width: 980px;
+    margin: 22px auto 0;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  ::-webkit-scrollbar{ width: 8px; }
+  ::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title-block">
+      <h1>Focus Bench</h1>
+      <span class="subtitle">// task log + timer</span>
+    </div>
+    <div class="status-strip">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">IDLE</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- TASK LOG -->
+    <div class="panel">
+      <p class="panel-label">Task Log</p>
+      <div class="tag-bar" id="tagBar">
+        <div class="tag-chip active" data-tag="" id="allChip">All</div>
+        <div class="tag-add">
+          <div class="swatch-picker" id="swatchPicker"></div>
+          <input type="text" id="newTagName" placeholder="New tag…" maxlength="20">
+          <div class="tag-chip tag-preview" id="tagPreview">
+            <span class="swatch" id="tagPreviewSwatch"></span>
+            <span class="chip-name" id="tagPreviewName">Tag</span>
+          </div>
+          <button class="btn btn-sm" id="addTagBtn">+</button>
+        </div>
+      </div>
+      <div class="task-input-row">
+        <input type="text" id="taskInput" placeholder="Add a task…" maxlength="140">
+        <select class="tag-select" id="taskTagSelect">
+          <option value="">No tag</option>
+        </select>
+        <button class="btn btn-amber" id="addTaskBtn">Add</button>
+      </div>
+      <div id="taskList"></div>
+      <div id="emptyState" class="empty-state">No tasks yet — add your first one above.</div>
+      <div class="task-footer">
+        <span id="taskCountText">0 tasks</span>
+        <button class="btn btn-ghost btn-sm" id="clearDoneBtn">Clear completed</button>
+      </div>
+    </div>
+
+    <!-- TIMER -->
+    <div class="panel">
+      <p class="panel-label">Session</p>
+
+      <span class="mode-tag" id="modeTag"><span class="dot"></span><span id="modeTagText">WORK</span></span>
+
+      <div class="readout" id="readout">25:00</div>
+
+      <div class="control-row">
+        <button class="btn btn-amber" id="startPauseBtn">Start</button>
+        <button class="btn" id="skipBtn">Skip</button>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">At the alarm</span>
+        <div class="toggle-switch">
+          <button id="rollingBtn" class="active">Rolling clock</button>
+          <button id="pauseAtAlarmBtn">Pause at alarm</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Durations (minutes)</span>
+        <div class="duration-inputs">
+          <div class="duration-field">
+            <label for="workMinutes">Focus</label>
+            <input type="number" id="workMinutes" min="1" max="180" value="25">
+          </div>
+          <div class="duration-field">
+            <label for="breakMinutes">Break</label>
+            <input type="number" id="breakMinutes" min="1" max="60" value="5">
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-bottom:0;">
+        <span class="field-label">Breaks completed</span>
+        <div class="counter-row">
+          <div class="leds" id="ledRow"></div>
+          <div class="counter-num" id="breakCount">0</div>
+        </div>
+        <div class="day-reset">
+          <button class="btn btn-ghost btn-sm" id="resetDayBtn">Reset day</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span id="storageStatus">Saved automatically in this browser.</span>
+    <button class="btn btn-ghost btn-sm" id="exportBtn">Export backup</button>
+    <button class="btn btn-ghost btn-sm" id="importBtn">Import backup</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+  </footer>
+</div>
+
+<script>
+(function(){
+  // ---------------- Persistence ----------------
+  const STORAGE_KEY = 'focus-bench-state-v1';
+
+  function collectState(){
+    return {
+      tasks,
+      taskIdCounter,
+      tags,
+      activeFilter,
+      phase,
+      rollingMode,
+      secondsLeft,
+      breaksCompleted,
+      workMinutes: parseInt(workMinutesInput.value, 10) || 25,
+      breakMinutes: parseInt(breakMinutesInput.value, 10) || 5,
+      savedAt: new Date().toISOString()
+    };
+  }
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+    } catch(e){
+      // storage unavailable (private browsing, quota, etc) — fail quietly, app still works in-session
+      const status = document.getElementById('storageStatus');
+      if(status) status.textContent = 'Auto-save unavailable in this browser — use Export to back up manually.';
+    }
+  }
+
+  function applyState(state){
+    if(!state) return;
+    tasks = Array.isArray(state.tasks) ? state.tasks : [];
+    taskIdCounter = state.taskIdCounter || (tasks.reduce((m,t)=>Math.max(m,t.id||0),0) + 1);
+    tags = Array.isArray(state.tags) ? state.tags : [];
+    activeFilter = (state.activeFilter && tags.some(t => t.name === state.activeFilter)) ? state.activeFilter : '';
+    phase = state.phase === 'break' ? 'break' : 'work';
+    rollingMode = state.rollingMode !== false;
+    breaksCompleted = state.breaksCompleted || 0;
+    if(state.workMinutes) workMinutesInput.value = state.workMinutes;
+    if(state.breakMinutes) breakMinutesInput.value = state.breakMinutes;
+    secondsLeft = typeof state.secondsLeft === 'number' ? state.secondsLeft : currentPhaseSeconds(phase);
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return false;
+      applyState(JSON.parse(raw));
+      return true;
+    } catch(e){
+      return false;
+    }
+  }
+
+  // ---------------- Task log ----------------
+  const RAINBOW = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#94a3b8'];
+
+  let tasks = [];
+  let taskIdCounter = 1;
+  let tags = [];              // { name, color } — array order = display/group order
+  let activeFilter = '';      // '' = show all (grouped)
+  let selectedNewColor = RAINBOW[0];
+  let openTagMenuFor = null;  // task id whose tag-change menu is open
+
+  const taskInput = document.getElementById('taskInput');
+  const addTaskBtn = document.getElementById('addTaskBtn');
+  const taskList = document.getElementById('taskList');
+  const emptyState = document.getElementById('emptyState');
+  const taskCountText = document.getElementById('taskCountText');
+  const clearDoneBtn = document.getElementById('clearDoneBtn');
+  const taskTagSelect = document.getElementById('taskTagSelect');
+  const tagBar = document.getElementById('tagBar');
+  const allChip = document.getElementById('allChip');
+  const tagAddEl = document.querySelector('.tag-add');
+  const swatchPicker = document.getElementById('swatchPicker');
+  const newTagName = document.getElementById('newTagName');
+  const addTagBtn = document.getElementById('addTagBtn');
+  const tagPreview = document.getElementById('tagPreview');
+  const tagPreviewSwatch = document.getElementById('tagPreviewSwatch');
+  const tagPreviewName = document.getElementById('tagPreviewName');
+
+  function hexToRgba(hex, alpha){
+    const h = (hex || '').replace('#','');
+    if(h.length !== 6) return `rgba(255,255,255,${alpha})`;
+    const r = parseInt(h.substring(0,2),16);
+    const g = parseInt(h.substring(2,4),16);
+    const b = parseInt(h.substring(4,6),16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  function findTag(name){
+    return tags.find(t => t.name === name);
+  }
+
+  function setFilter(name){
+    activeFilter = name;
+    openTagMenuFor = null;
+    renderTagBar();
+    renderTasks();
+  }
+
+  // ---- Swatch picker + live preview for new tags ----
+  function renderSwatchPicker(){
+    swatchPicker.innerHTML = '';
+    RAINBOW.forEach(color => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'swatch-btn' + (color === selectedNewColor ? ' selected' : '');
+      btn.style.background = color;
+      btn.setAttribute('aria-label', `Use colour ${color}`);
+      btn.onclick = () => { selectedNewColor = color; renderSwatchPicker(); updateTagPreview(); };
+      swatchPicker.appendChild(btn);
+    });
+  }
+
+  function updateTagPreview(){
+    tagPreviewSwatch.style.background = selectedNewColor;
+    tagPreviewName.textContent = newTagName.value.trim() || 'Tag';
+  }
+
+  newTagName.addEventListener('input', updateTagPreview);
+
+  // ---- Tag bar: filter chips + reorder + delete ----
+  function renderTagBar(){
+    tagBar.querySelectorAll('.tag-chip:not(#allChip)').forEach(el => el.remove());
+    tags.forEach((tag, index) => {
+      const chip = document.createElement('div');
+      chip.className = 'tag-chip' + (activeFilter === tag.name ? ' active' : '');
+
+      const swatch = document.createElement('span');
+      swatch.className = 'swatch';
+      swatch.style.background = tag.color;
+      chip.appendChild(swatch);
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'chip-name';
+      nameSpan.textContent = tag.name;
+      chip.appendChild(nameSpan);
+
+      const up = document.createElement('button');
+      up.className = 'tag-move';
+      up.textContent = '▲';
+      up.disabled = index === 0;
+      up.setAttribute('aria-label', `Move ${tag.name} earlier`);
+      up.onclick = (e) => { e.stopPropagation(); moveTag(index, -1); };
+      chip.appendChild(up);
+
+      const down = document.createElement('button');
+      down.className = 'tag-move';
+      down.textContent = '▼';
+      down.disabled = index === tags.length - 1;
+      down.setAttribute('aria-label', `Move ${tag.name} later`);
+      down.onclick = (e) => { e.stopPropagation(); moveTag(index, 1); };
+      chip.appendChild(down);
+
+      const del = document.createElement('button');
+      del.className = 'tag-del';
+      del.textContent = '×';
+      del.setAttribute('aria-label', `Delete tag ${tag.name}`);
+      del.onclick = (e) => { e.stopPropagation(); deleteTag(tag.name); };
+      chip.appendChild(del);
+
+      chip.addEventListener('click', () => setFilter(tag.name));
+      tagBar.insertBefore(chip, tagAddEl);
+    });
+    allChip.classList.toggle('active', activeFilter === '');
+  }
+
+  function moveTag(index, dir){
+    const target = index + dir;
+    if(target < 0 || target >= tags.length) return;
+    [tags[index], tags[target]] = [tags[target], tags[index]];
+    renderTagBar();
+    renderTasks();
+    saveState();
+  }
+
+  function populateTagSelect(){
+    const current = taskTagSelect.value;
+    taskTagSelect.innerHTML = '<option value="">No tag</option>';
+    tags.forEach(tag => {
+      const opt = document.createElement('option');
+      opt.value = tag.name;
+      opt.textContent = tag.name;
+      opt.style.color = tag.color;
+      taskTagSelect.appendChild(opt);
+    });
+    if(tags.some(t => t.name === current)) taskTagSelect.value = current;
+  }
+
+  function addTag(){
+    const name = newTagName.value.trim();
+    if(!name) return;
+    if(tags.some(t => t.name.toLowerCase() === name.toLowerCase())){
+      newTagName.value = '';
+      updateTagPreview();
+      return;
+    }
+    tags.push({ name, color: selectedNewColor });
+    newTagName.value = '';
+    updateTagPreview();
+    renderTagBar();
+    populateTagSelect();
+    renderTasks();
+    saveState();
+  }
+
+  function deleteTag(name){
+    tags = tags.filter(t => t.name !== name);
+    tasks.forEach(t => { if(t.tag === name) t.tag = ''; });
+    if(activeFilter === name) activeFilter = '';
+    renderTagBar();
+    populateTagSelect();
+    renderTasks();
+    saveState();
+  }
+
+  allChip.addEventListener('click', () => setFilter(''));
+  addTagBtn.onclick = addTag;
+  newTagName.addEventListener('keydown', e => { if(e.key === 'Enter') addTag(); });
+
+  function addTask(){
+    const text = taskInput.value.trim();
+    if(!text) return;
+    const tag = taskTagSelect.value || '';
+    tasks.push({ id: taskIdCounter++, text, done:false, tag });
+    taskInput.value = '';
+    renderTasks();
+    saveState();
+    taskInput.focus();
+  }
+
+  // ---- Per-task tag-change menu ----
+  function toggleTagMenu(taskId){
+    openTagMenuFor = openTagMenuFor === taskId ? null : taskId;
+    renderTasks();
+  }
+
+  function assignTag(task, tagName){
+    task.tag = tagName;
+    openTagMenuFor = null;
+    renderTasks();
+    saveState();
+  }
+
+  function buildTagButton(t){
+    const tag = t.tag ? findTag(t.tag) : null;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    if(tag){
+      btn.className = 'tag-btn';
+      btn.style.background = tag.color;
+      btn.title = `Tag: ${tag.name} (click to change)`;
+    } else {
+      btn.className = 'tag-btn none';
+      btn.textContent = '+';
+      btn.title = 'Add a tag';
+    }
+    btn.onclick = (e) => { e.stopPropagation(); toggleTagMenu(t.id); };
+    return btn;
+  }
+
+  function buildTagMenu(t){
+    const menu = document.createElement('div');
+    menu.className = 'tag-menu';
+    menu.addEventListener('click', e => e.stopPropagation());
+
+    const noneBtn = document.createElement('button');
+    const noneSwatch = document.createElement('span');
+    noneSwatch.className = 'swatch none-swatch';
+    noneBtn.appendChild(noneSwatch);
+    noneBtn.appendChild(document.createTextNode('No tag'));
+    noneBtn.onclick = () => assignTag(t, '');
+    menu.appendChild(noneBtn);
+
+    tags.forEach(tag => {
+      const opt = document.createElement('button');
+      const swatch = document.createElement('span');
+      swatch.className = 'swatch';
+      swatch.style.background = tag.color;
+      opt.appendChild(swatch);
+      opt.appendChild(document.createTextNode(tag.name));
+      opt.onclick = () => assignTag(t, tag.name);
+      menu.appendChild(opt);
+    });
+    return menu;
+  }
+
+  function buildTaskItem(t){
+    const item = document.createElement('div');
+    item.className = 'task-item' + (t.done ? ' done' : '');
+
+    const tag = t.tag ? findTag(t.tag) : null;
+    item.style.backgroundColor = tag ? hexToRgba(tag.color, 0.15) : '';
+    item.style.borderColor = tag ? hexToRgba(tag.color, 0.35) : '';
+
+    const check = document.createElement('button');
+    check.className = 'check' + (t.done ? ' done' : '');
+    check.setAttribute('aria-label', t.done ? 'Mark incomplete' : 'Mark complete');
+    check.onclick = () => { t.done = !t.done; renderTasks(); saveState(); };
+    item.appendChild(check);
+
+    item.appendChild(buildTagButton(t));
+
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.textContent = t.text;
+    item.appendChild(label);
+
+    const del = document.createElement('button');
+    del.className = 'del';
+    del.setAttribute('aria-label', 'Delete task');
+    del.textContent = '×';
+    del.onclick = () => { tasks = tasks.filter(x => x.id !== t.id); renderTasks(); saveState(); };
+    item.appendChild(del);
+
+    if(openTagMenuFor === t.id){
+      item.appendChild(buildTagMenu(t));
+    }
+
+    return item;
+  }
+
+  function renderTasks(){
+    taskList.innerHTML = '';
+
+    if(activeFilter){
+      // single-tag flat view
+      const visible = tasks.filter(t => t.tag === activeFilter);
+      if(tasks.length === 0){
+        emptyState.style.display = 'block';
+        emptyState.textContent = 'No tasks yet — add your first one above.';
+      } else if(visible.length === 0){
+        emptyState.style.display = 'block';
+        emptyState.textContent = 'No tasks with this tag.';
+      } else {
+        emptyState.style.display = 'none';
+      }
+      visible.forEach(t => taskList.appendChild(buildTaskItem(t)));
+    } else {
+      // grouped view, ordered by the tag section's order, untagged last
+      if(tasks.length === 0){
+        emptyState.style.display = 'block';
+        emptyState.textContent = 'No tasks yet — add your first one above.';
+      } else {
+        emptyState.style.display = 'none';
+      }
+
+      tags.forEach(tag => {
+        const group = tasks.filter(t => t.tag === tag.name);
+        if(group.length === 0) return;
+        const header = document.createElement('div');
+        header.className = 'group-header';
+        const swatch = document.createElement('span');
+        swatch.className = 'swatch';
+        swatch.style.background = tag.color;
+        header.appendChild(swatch);
+        header.appendChild(document.createTextNode(tag.name));
+        const count = document.createElement('span');
+        count.className = 'count';
+        count.textContent = group.length;
+        header.appendChild(count);
+        taskList.appendChild(header);
+        group.forEach(t => taskList.appendChild(buildTaskItem(t)));
+      });
+
+      const knownTagNames = tags.map(t => t.name);
+      const untagged = tasks.filter(t => !t.tag || !knownTagNames.includes(t.tag));
+      if(untagged.length > 0){
+        if(tags.length > 0){
+          const header = document.createElement('div');
+          header.className = 'group-header';
+          const swatch = document.createElement('span');
+          swatch.className = 'swatch none-swatch';
+          header.appendChild(swatch);
+          header.appendChild(document.createTextNode('No tag'));
+          const count = document.createElement('span');
+          count.className = 'count';
+          count.textContent = untagged.length;
+          header.appendChild(count);
+          taskList.appendChild(header);
+        }
+        untagged.forEach(t => taskList.appendChild(buildTaskItem(t)));
+      }
+    }
+
+    const doneCount = tasks.filter(t => t.done).length;
+    taskCountText.textContent = tasks.length === 0
+      ? '0 tasks'
+      : `${doneCount}/${tasks.length} done`;
+  }
+
+  document.addEventListener('click', () => {
+    if(openTagMenuFor !== null){ openTagMenuFor = null; renderTasks(); }
+  });
+
+  addTaskBtn.onclick = addTask;
+  taskInput.addEventListener('keydown', e => { if(e.key === 'Enter') addTask(); });
+  clearDoneBtn.onclick = () => { tasks = tasks.filter(t => !t.done); renderTasks(); saveState(); };
+
+  renderSwatchPicker();
+  updateTagPreview();
+  renderTagBar();
+  populateTagSelect();
+  renderTasks();
+
+  // ---------------- Timer ----------------
+  const workMinutesInput = document.getElementById('workMinutes');
+  const breakMinutesInput = document.getElementById('breakMinutes');
+  const readout = document.getElementById('readout');
+  const modeTag = document.getElementById('modeTag');
+  const modeTagText = document.getElementById('modeTagText');
+  const startPauseBtn = document.getElementById('startPauseBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const rollingBtn = document.getElementById('rollingBtn');
+  const pauseAtAlarmBtn = document.getElementById('pauseAtAlarmBtn');
+  const breakCountEl = document.getElementById('breakCount');
+  const ledRow = document.getElementById('ledRow');
+  const resetDayBtn = document.getElementById('resetDayBtn');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+
+  let phase = 'work';        // 'work' | 'break'
+  let rollingMode = true;    // true = auto-continue through alarm, false = pause and wait
+  let secondsLeft = 25 * 60; // counts down; goes negative in rolling overtime until phase flips
+  let running = false;
+  let timerId = null;
+  let breaksCompleted = 0;
+
+  function currentPhaseSeconds(p){
+    const mins = p === 'work'
+      ? Math.max(1, parseInt(workMinutesInput.value, 10) || 25)
+      : Math.max(1, parseInt(breakMinutesInput.value, 10) || 5);
+    return mins * 60;
+  }
+
+  function formatTime(totalSeconds){
+    const negative = totalSeconds < 0;
+    const abs = Math.abs(totalSeconds);
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
+    const str = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    return negative ? '+' + str : str;
+  }
+
+  function renderLeds(){
+    ledRow.innerHTML = '';
+    const shown = breaksCompleted % 12 === 0 && breaksCompleted > 0 ? 12 : (breaksCompleted % 12 || 12);
+    const litCount = breaksCompleted === 0 ? 0 : shown;
+    const total = 12;
+    for(let i=0;i<total;i++){
+      const d = document.createElement('div');
+      d.className = 'led' + (i < litCount ? ' lit' : '');
+      ledRow.appendChild(d);
+    }
+  }
+
+  function updateDisplay(){
+    readout.textContent = formatTime(secondsLeft);
+    readout.classList.toggle('break', phase === 'break');
+    readout.classList.toggle('overtime', secondsLeft < 0);
+    modeTag.classList.toggle('break', phase === 'break');
+    modeTagText.textContent = phase === 'work' ? 'WORK' : 'BREAK';
+    breakCountEl.textContent = breaksCompleted;
+    renderLeds();
+
+    rollingBtn.classList.toggle('active', rollingMode);
+    pauseAtAlarmBtn.classList.toggle('active', !rollingMode);
+
+    statusDot.classList.remove('on-work','on-break');
+    if(running){
+      statusDot.classList.add(phase === 'work' ? 'on-work' : 'on-break');
+      statusText.textContent = phase === 'work' ? 'FOCUSING' : 'ON BREAK';
+    } else {
+      statusText.textContent = 'PAUSED';
+    }
+    startPauseBtn.textContent = running ? 'Pause' : 'Start';
+  }
+
+  // ---- Audio alarm (Web Audio API, no external files) ----
+  let audioCtx = null;
+  function beep(freq, startTime, duration){
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+    gain.gain.linearRampToValueAtTime(0, startTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.02);
+  }
+
+  function playAlarm(endingPhase){
+    if(!audioCtx){
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e){ return; }
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const base = audioCtx.currentTime;
+    const freq = endingPhase === 'work' ? 880 : 660;
+    // three short pulses
+    beep(freq, base, 0.16);
+    beep(freq, base + 0.24, 0.16);
+    beep(freq, base + 0.48, 0.16);
+  }
+
+  function switchPhase(){
+    const endingPhase = phase;
+    playAlarm(endingPhase);
+    if(endingPhase === 'break'){
+      breaksCompleted += 1;
+    }
+    phase = endingPhase === 'work' ? 'break' : 'work';
+    secondsLeft = currentPhaseSeconds(phase);
+    if(!rollingMode){
+      running = false;
+      stopTicking();
+    }
+    updateDisplay();
+    saveState();
+  }
+
+  function tick(){
+    secondsLeft -= 1;
+    if(secondsLeft === 0){
+      updateDisplay();
+      switchPhase();
+      return;
+    }
+    if(secondsLeft < 0 && !rollingMode){
+      // safety net; pause mode should have stopped already
+      secondsLeft = 0;
+      running = false;
+      stopTicking();
+    }
+    updateDisplay();
+  }
+
+  function startTicking(){
+    if(timerId) return;
+    timerId = setInterval(tick, 1000);
+  }
+  function stopTicking(){
+    if(timerId){ clearInterval(timerId); timerId = null; }
+  }
+
+  startPauseBtn.onclick = () => {
+    if(!audioCtx){
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    } else if(audioCtx.state === 'suspended'){
+      audioCtx.resume();
+    }
+    running = !running;
+    if(running){
+      if(secondsLeft <= 0 && !rollingMode) secondsLeft = currentPhaseSeconds(phase);
+      startTicking();
+    } else {
+      stopTicking();
+    }
+    updateDisplay();
+    saveState();
+  };
+
+  skipBtn.onclick = () => {
+    switchPhase();
+    if(running) startTicking();
+  };
+
+  resetBtn.onclick = () => {
+    running = false;
+    stopTicking();
+    secondsLeft = currentPhaseSeconds(phase);
+    updateDisplay();
+    saveState();
+  };
+
+  resetDayBtn.onclick = () => {
+    running = false;
+    stopTicking();
+    phase = 'work';
+    breaksCompleted = 0;
+    secondsLeft = currentPhaseSeconds('work');
+    updateDisplay();
+    saveState();
+  };
+
+  rollingBtn.onclick = () => {
+    rollingMode = true;
+    rollingBtn.classList.add('active');
+    pauseAtAlarmBtn.classList.remove('active');
+    saveState();
+  };
+  pauseAtAlarmBtn.onclick = () => {
+    rollingMode = false;
+    pauseAtAlarmBtn.classList.add('active');
+    rollingBtn.classList.remove('active');
+    saveState();
+  };
+
+  // If not running, editing duration fields updates the readout immediately
+  workMinutesInput.addEventListener('change', () => {
+    if(!running && phase === 'work') { secondsLeft = currentPhaseSeconds('work'); updateDisplay(); }
+    saveState();
+  });
+  breakMinutesInput.addEventListener('change', () => {
+    if(!running && phase === 'break') { secondsLeft = currentPhaseSeconds('break'); updateDisplay(); }
+    saveState();
+  });
+
+  // ---------------- Export / Import backup ----------------
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const importFile = document.getElementById('importFile');
+  const storageStatus = document.getElementById('storageStatus');
+
+  exportBtn.onclick = () => {
+    const blob = new Blob([JSON.stringify(collectState(), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `focus-bench-backup-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  importBtn.onclick = () => importFile.click();
+
+  importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const state = JSON.parse(reader.result);
+        running = false;
+        stopTicking();
+        applyState(state);
+        renderTagBar();
+        populateTagSelect();
+        renderTasks();
+        updateDisplay();
+        saveState();
+        storageStatus.textContent = 'Backup imported and saved.';
+      } catch(err){
+        storageStatus.textContent = 'Could not read that file — is it a Focus Bench backup?';
+      }
+    };
+    reader.readAsText(file);
+    importFile.value = '';
+  });
+
+  // ---------------- Init ----------------
+  const restored = loadState();
+  renderTagBar();
+  populateTagSelect();
+  renderTasks();
+  updateDisplay();
+  if(restored) saveState();
+})();
+</script>
+</body>
+</html>

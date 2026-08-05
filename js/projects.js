@@ -62,8 +62,19 @@ const PROJECTS = [
     status: "live",
     repo: "",
     demo: "https://kovnein.github.io/odds-n-ends/projects/passphrase-bench.html",
-    tags: ["single-file", "password", "security"]
+    tags: ["single-file", "password", "security", "port"]
   },
+
+  {
+    title: "Focus Bench",
+    description: "A simple focus tool with task list and focus/break timer.",
+    lang: "html",
+    status: "live",
+    repo: "",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/focus-bench.html",
+    tags: ["single-file", "productivity"]
+  },
+
 
   {
     title: "The Fold - Temporal Loop Horror",
@@ -72,7 +83,7 @@ const PROJECTS = [
     status: "live",
     repo: "https://github.com/kovnein/unspace-journey-adventure",
     demo: "https://kovnein.github.io/odds-n-ends/projects/the-fold/index.html",
-    tags: ["multi-file", "game"]
+    tags: ["multi-file", "game", "port"]
   }
 
 ];
