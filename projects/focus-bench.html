@@ -610,10 +610,9 @@
   }
 
   .leds{
-    display:flex;
-    gap: 5px;
-    flex-wrap: wrap;
-    max-width: 160px;
+    display:grid;
+    grid-template-columns: repeat(4, 10px);
+    gap: 6px;
   }
   .led{
     width: 10px; height:10px;
@@ -626,6 +625,22 @@
     border-color: var(--green);
     box-shadow: 0 0 6px 1px rgba(110,231,160,0.6);
   }
+
+  @keyframes flashAlert{
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .readout.flashing{
+    animation: flashAlert 1s ease-in-out infinite;
+  }
+
+  #silenceBtn{
+    width: 100%;
+    margin-bottom: 12px;
+    border-color: var(--red-dim);
+    color: var(--red);
+  }
+  #silenceBtn:hover{ border-color: var(--red); }
 
   .counter-num{
     font-family: var(--mono);
@@ -711,6 +726,8 @@
       <span class="mode-tag" id="modeTag"><span class="dot"></span><span id="modeTagText">WORK</span></span>
 
       <div class="readout" id="readout">25:00</div>
+
+      <button class="btn" id="silenceBtn" style="display:none;">Silence alarm</button>
 
       <div class="control-row">
         <button class="btn btn-amber" id="startPauseBtn">Start</button>
@@ -1178,6 +1195,7 @@
   const startPauseBtn = document.getElementById('startPauseBtn');
   const skipBtn = document.getElementById('skipBtn');
   const resetBtn = document.getElementById('resetBtn');
+  const silenceBtn = document.getElementById('silenceBtn');
   const rollingBtn = document.getElementById('rollingBtn');
   const pauseAtAlarmBtn = document.getElementById('pauseAtAlarmBtn');
   const breakCountEl = document.getElementById('breakCount');
@@ -1188,16 +1206,37 @@
 
   let phase = 'work';        // 'work' | 'break'
   let rollingMode = true;    // true = auto-continue through alarm, false = pause and wait
-  let secondsLeft = 25 * 60; // counts down; goes negative in rolling overtime until phase flips
+  let secondsLeft = 25 * 60; // authoritative remaining-seconds baseline; resynced every tick
   let running = false;
   let timerId = null;
   let breaksCompleted = 0;
+
+  // Epoch-based timing: instead of trusting "one setInterval fire = one second",
+  // every tick recomputes remaining time from a wall-clock timestamp. This keeps
+  // the countdown correct even when the browser throttles background tabs
+  // (which can delay or skip interval fires for minutes at a time).
+  let runStartEpoch = null;  // ms timestamp `secondsLeft` was last accurate as of
+
+  // Pause-at-alarm "nag" state — flashing + repeating alarm until acknowledged
+  let awaitingAck = false;   // true while flashing, waiting for the user to progress
+  let nagActive = false;     // true while the repeat-alarm interval is live
+  let nagCount = 0;
+  let nagTimerId = null;
+  let alarmEndingPhase = null;
+  const NAG_INTERVAL_MS = 5 * 60 * 1000;
+  const NAG_MAX = 5;
 
   function currentPhaseSeconds(p){
     const mins = p === 'work'
       ? Math.max(1, parseInt(workMinutesInput.value, 10) || 25)
       : Math.max(1, parseInt(breakMinutesInput.value, 10) || 5);
     return mins * 60;
+  }
+
+  function computeCurrentSeconds(){
+    if(runStartEpoch === null) return secondsLeft;
+    const elapsed = Math.floor((Date.now() - runStartEpoch) / 1000);
+    return secondsLeft - elapsed;
   }
 
   function formatTime(totalSeconds){
@@ -1211,9 +1250,8 @@
 
   function renderLeds(){
     ledRow.innerHTML = '';
-    const shown = breaksCompleted % 12 === 0 && breaksCompleted > 0 ? 12 : (breaksCompleted % 12 || 12);
-    const litCount = breaksCompleted === 0 ? 0 : shown;
-    const total = 12;
+    const total = 8;
+    const litCount = breaksCompleted === 0 ? 0 : (breaksCompleted % total === 0 ? total : breaksCompleted % total);
     for(let i=0;i<total;i++){
       const d = document.createElement('div');
       d.className = 'led' + (i < litCount ? ' lit' : '');
@@ -1222,13 +1260,23 @@
   }
 
   function updateDisplay(){
+    // Resync the baseline to real elapsed wall-clock time on every render call —
+    // this is what keeps the readout correct after a tab was backgrounded.
+    if(running && runStartEpoch !== null){
+      secondsLeft = computeCurrentSeconds();
+      runStartEpoch = Date.now();
+    }
+
     readout.textContent = formatTime(secondsLeft);
     readout.classList.toggle('break', phase === 'break');
     readout.classList.toggle('overtime', secondsLeft < 0);
+    readout.classList.toggle('flashing', awaitingAck);
     modeTag.classList.toggle('break', phase === 'break');
     modeTagText.textContent = phase === 'work' ? 'WORK' : 'BREAK';
     breakCountEl.textContent = breaksCompleted;
     renderLeds();
+
+    silenceBtn.style.display = nagActive ? 'block' : 'none';
 
     rollingBtn.classList.toggle('active', rollingMode);
     pauseAtAlarmBtn.classList.toggle('active', !rollingMode);
@@ -1237,6 +1285,8 @@
     if(running){
       statusDot.classList.add(phase === 'work' ? 'on-work' : 'on-break');
       statusText.textContent = phase === 'work' ? 'FOCUSING' : 'ON BREAK';
+    } else if(awaitingAck){
+      statusText.textContent = 'WAITING';
     } else {
       statusText.textContent = 'PAUSED';
     }
@@ -1274,6 +1324,40 @@
     beep(freq, base + 0.48, 0.16);
   }
 
+  // ---- Nag repeat (pause-at-alarm only) ----
+  function stopNagInterval(){
+    if(nagTimerId){ clearInterval(nagTimerId); nagTimerId = null; }
+  }
+
+  function endNag(){
+    stopNagInterval();
+    nagActive = false;
+  }
+
+  function fireNag(){
+    if(!nagActive) return;
+    if(nagCount >= NAG_MAX){ endNag(); return; }
+    playAlarm(alarmEndingPhase);
+    nagCount++;
+    if(nagCount >= NAG_MAX) endNag();
+  }
+
+  function triggerPauseAlarm(endingPhase){
+    alarmEndingPhase = endingPhase;
+    playAlarm(endingPhase);
+    nagCount = 1;
+    awaitingAck = true;
+    nagActive = true;
+    stopNagInterval();
+    nagTimerId = setInterval(fireNag, NAG_INTERVAL_MS);
+  }
+
+  function clearAwaitingAck(){
+    endNag();
+    awaitingAck = false;
+  }
+
+  // Manual phase switch (Skip button) — plays one alarm, does not flash/nag.
   function switchPhase(){
     const endingPhase = phase;
     playAlarm(endingPhase);
@@ -1284,26 +1368,55 @@
     secondsLeft = currentPhaseSeconds(phase);
     if(!rollingMode){
       running = false;
+      runStartEpoch = null;
       stopTicking();
+    } else if(running){
+      runStartEpoch = Date.now();
     }
     updateDisplay();
     saveState();
   }
 
+  // Natural zero-crossing, driven by the clock rather than a button press.
   function tick(){
-    secondsLeft -= 1;
-    if(secondsLeft === 0){
+    if(!running) return;
+    const sl = computeCurrentSeconds();
+
+    if(!rollingMode && sl <= 0){
+      const endingPhase = phase;
+      if(endingPhase === 'break') breaksCompleted += 1;
+      phase = endingPhase === 'work' ? 'break' : 'work';
+      secondsLeft = currentPhaseSeconds(phase);
+      running = false;
+      runStartEpoch = null;
+      stopTicking();
+      triggerPauseAlarm(endingPhase);
       updateDisplay();
-      switchPhase();
+      saveState();
       return;
     }
-    if(secondsLeft < 0 && !rollingMode){
-      // safety net; pause mode should have stopped already
-      secondsLeft = 0;
-      running = false;
-      stopTicking();
+
+    if(rollingMode && sl <= 0){
+      // Handle the (rare) case of being backgrounded through more than one
+      // phase boundary — walk forward until we land in the current phase.
+      let overflow = sl;
+      let iterations = 0;
+      while(overflow <= 0 && iterations < 500){
+        const endingPhase = phase;
+        playAlarm(endingPhase);
+        if(endingPhase === 'break') breaksCompleted += 1;
+        phase = endingPhase === 'work' ? 'break' : 'work';
+        overflow += currentPhaseSeconds(phase);
+        iterations++;
+      }
+      secondsLeft = overflow;
+      runStartEpoch = Date.now();
+      updateDisplay();
+      saveState();
+      return;
     }
-    updateDisplay();
+
+    updateDisplay(); // no crossing — updateDisplay() resyncs secondsLeft from the clock
   }
 
   function startTicking(){
@@ -1314,31 +1427,55 @@
     if(timerId){ clearInterval(timerId); timerId = null; }
   }
 
+  // Catch up immediately when the tab regains focus/visibility, rather than
+  // waiting for the next (possibly throttled) interval fire.
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible' && running) tick();
+  });
+  window.addEventListener('focus', () => {
+    if(running) tick();
+  });
+
   startPauseBtn.onclick = () => {
     if(!audioCtx){
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
     } else if(audioCtx.state === 'suspended'){
       audioCtx.resume();
     }
+
+    if(awaitingAck) clearAwaitingAck();
+
     running = !running;
     if(running){
       if(secondsLeft <= 0 && !rollingMode) secondsLeft = currentPhaseSeconds(phase);
+      runStartEpoch = Date.now();
       startTicking();
     } else {
+      secondsLeft = computeCurrentSeconds();
+      runStartEpoch = null;
       stopTicking();
     }
     updateDisplay();
     saveState();
   };
 
+  silenceBtn.onclick = () => {
+    endNag();
+    updateDisplay();
+    saveState();
+  };
+
   skipBtn.onclick = () => {
+    if(awaitingAck) clearAwaitingAck();
     switchPhase();
     if(running) startTicking();
   };
 
   resetBtn.onclick = () => {
     running = false;
+    runStartEpoch = null;
     stopTicking();
+    clearAwaitingAck();
     secondsLeft = currentPhaseSeconds(phase);
     updateDisplay();
     saveState();
@@ -1346,7 +1483,9 @@
 
   resetDayBtn.onclick = () => {
     running = false;
+    runStartEpoch = null;
     stopTicking();
+    clearAwaitingAck();
     phase = 'work';
     breaksCompleted = 0;
     secondsLeft = currentPhaseSeconds('work');
