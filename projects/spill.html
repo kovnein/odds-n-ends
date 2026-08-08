@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SPILL — a word-tile scramble</title>
 <style>
   :root{
@@ -123,6 +123,20 @@
   }
   .toolbar-sep{ width:1px; height:20px; background: rgba(244,235,217,0.15); margin:0 2px; }
 
+  #controls-panel{
+    overflow:hidden;
+    max-height: 220px;
+    opacity: 1;
+    transition: max-height .22s ease, opacity .18s ease, margin .22s ease;
+  }
+  #controls-panel.collapsed{
+    max-height: 0;
+    opacity: 0;
+    margin-top: -4px;
+  }
+  #controls-toggle-btn{ font-size:13px; transition: transform .2s ease; }
+  #controls-toggle-btn.collapsed{ transform: rotate(-90deg); }
+
   /* fuse / timer bar */
   .fuse-wrap{
     margin-top: 10px;
@@ -151,6 +165,7 @@
     flex: 1 1 auto;
     position: relative;
     overflow: auto;
+    touch-action: none;
     background:
       repeating-linear-gradient(0deg, transparent, transparent 41px, rgba(244,235,217,0.035) 42px),
       repeating-linear-gradient(90deg, transparent, transparent 41px, rgba(244,235,217,0.035) 42px);
@@ -254,9 +269,15 @@
     overflow:auto;
   }
   #words-panel h3{
-    margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:0.8px;
+    margin:0; font-size:11px; text-transform:uppercase; letter-spacing:0.8px;
     color: rgba(244,235,217,0.55); font-weight:700;
+    display:flex; align-items:center; justify-content:space-between; gap:6px;
+    cursor:pointer; user-select:none;
   }
+  .panel-caret{ font-size:9px; transition: transform .18s ease; }
+  #words-panel #words-list{ margin-top:6px; }
+  #words-panel.collapsed #words-list{ display:none; margin-top:0; }
+  #words-panel.collapsed .panel-caret{ transform: rotate(-90deg); }
   #words-list{ display:flex; flex-wrap:wrap; gap:5px; }
   .word-chip{
     font-family: var(--mono); font-size:11px;
@@ -315,11 +336,6 @@
   .panel-divider{
     height:1px; background: rgba(0,0,0,0.12); margin: 22px 0 16px;
   }
-  .checkbox-row{
-    display:flex; align-items:flex-start; gap:8px;
-    font-size:12px; color:#5b5142; margin-top:10px; cursor:pointer;
-  }
-  .checkbox-row input{ margin-top:2px; accent-color: var(--plum-dim); }
   .help-list{
     margin:0; padding-left:18px; font-size:13px; color:#463c2e; line-height:1.6;
   }
@@ -338,6 +354,32 @@
   ::-webkit-scrollbar{ width:10px; height:10px; }
   ::-webkit-scrollbar-track{ background: var(--felt-deep); }
   ::-webkit-scrollbar-thumb{ background: var(--felt-line); border-radius:6px; }
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width: 640px){
+    header{ padding: 8px 10px 6px; }
+    h1{ font-size: 20px; }
+    .sub{ display:none; }
+    .header-controls{ gap:8px; }
+    .stat{ min-width:auto; }
+    .stat small{ display:none; }
+    .stat b{ font-size:13px; }
+    .btn-ghost .btn-label{ display:none; }
+    .btn-ghost{ padding:8px 9px; }
+    .toolbar{
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:2px;
+      margin-top:6px;
+    }
+    .toolbar::-webkit-scrollbar{ height:4px; }
+    .fuse-wrap{ margin-top:6px; }
+    .fuse-label{ font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #words-panel{ top:8px; right:8px; max-width:150px; padding:7px 10px; }
+    .tray-title{ font-size:10px; }
+    #tray-wrap{ padding:8px 10px 10px; }
+  }
 </style>
 </head>
 <body>
@@ -352,35 +394,38 @@
       <div class="header-controls">
         <div class="stat"><b id="bag-count">144</b><small>in the bag</small></div>
         <div class="stat"><b id="tray-count">0</b><small>in tray</small></div>
+        <button class="btn-icon" id="controls-toggle-btn" title="Show/hide controls">▾</button>
         <button class="btn-icon" id="settings-btn" title="Settings">⚙</button>
-        <button class="btn-ghost" id="newgame-btn">New game</button>
+        <button class="btn-ghost" id="newgame-btn"><span class="btn-label">New game</span></button>
       </div>
     </div>
 
-    <div class="toolbar">
-      <button class="btn-ghost" id="pause-btn" disabled>⏸ Pause</button>
-      <button class="btn-ghost" id="drawnow-btn" disabled title="Draw the next spill right now">🎲 Draw now</button>
-      <button class="btn-ghost" id="dump-btn" disabled title="Select one tray tile, then dump it for 3 new ones">♻ Dump 1→3</button>
-      <button class="btn-ghost" id="rotate-btn" disabled title="Select 2+ placed tiles, then rotate that shape 90°">↻ Rotate</button>
-      <span class="toolbar-sep"></span>
-      <button class="btn-ghost on" id="dict-toggle">📖 Dictionary: On</button>
-      <select class="btn-ghost" id="dict-tier" title="Which word list to check against">
-        <option value="nz">NZ dictionary</option>
-        <option value="common">Common words only</option>
-      </select>
-      <span class="toolbar-sep"></span>
-      <button class="btn-ghost" id="share-btn">💾 Share &amp; save</button>
-      <button class="btn-icon" id="help-btn" title="Help">?</button>
-    </div>
+    <div id="controls-panel">
+      <div class="toolbar">
+        <button class="btn-ghost" id="pause-btn" disabled title="Pause">⏸<span class="btn-label"> Pause</span></button>
+        <button class="btn-ghost" id="drawnow-btn" disabled title="Draw the next spill right now">🎲<span class="btn-label"> Draw now</span></button>
+        <button class="btn-ghost" id="dump-btn" disabled title="Select one tray tile, then dump it for 3 new ones">♻<span class="btn-label"> Dump 1→3</span></button>
+        <button class="btn-ghost" id="rotate-btn" disabled title="Select 2+ placed tiles, then rotate that shape 90°">↻<span class="btn-label"> Rotate</span></button>
+        <span class="toolbar-sep"></span>
+        <button class="btn-ghost on" id="dict-toggle" title="Dictionary checking">📖<span class="btn-label"> Dictionary: On</span></button>
+        <select class="btn-ghost" id="dict-tier" title="Which word list to check against">
+          <option value="nz">NZ dictionary</option>
+          <option value="common">Common words only</option>
+        </select>
+        <span class="toolbar-sep"></span>
+        <button class="btn-ghost" id="share-btn" title="Share & save">💾<span class="btn-label"> Share &amp; save</span></button>
+        <button class="btn-icon" id="help-btn" title="Help">?</button>
+      </div>
 
-    <div class="fuse-wrap"><div class="fuse-fill" id="fuse-fill"></div></div>
-    <div class="fuse-label" id="fuse-label">Set your hand and start the spill.</div>
+      <div class="fuse-wrap"><div class="fuse-fill" id="fuse-fill"></div></div>
+      <div class="fuse-label" id="fuse-label">Set your hand and start the spill.</div>
+    </div>
   </header>
 
   <main id="main">
     <div id="grid"></div>
     <div id="words-panel">
-      <h3 id="words-heading">Words on the felt (0)</h3>
+      <h3 id="words-heading"><span id="words-count-text">Words on the felt (0)</span><span class="panel-caret">▾</span></h3>
       <div id="words-list"></div>
     </div>
   </main>
@@ -433,7 +478,7 @@
     </div>
 
     <div class="panel-actions" style="justify-content:space-between; align-items:center;">
-      <button class="btn-ghost" id="setup-load-btn" type="button">Have a board code? Load it</button>
+      <button class="btn-ghost" id="setup-load-btn" type="button">Have a saved board? Load it</button>
       <button class="btn-primary" id="start-btn">Draw hand &amp; start</button>
     </div>
   </div>
@@ -442,21 +487,17 @@
 <div id="share-overlay" class="overlay hidden">
   <div class="panel">
     <h2>Share &amp; save</h2>
-    <p class="desc">A text snapshot of your felt and stats — copy it to brag, keep a record, or send it to someone.</p>
+    <p class="desc">A plain-text snapshot of your felt, tray, and settings. Copy it to keep a record, brag, or send it to someone stuck — pasting it back in (here, in a message, anywhere) reloads this exact board.</p>
     <textarea id="share-text" readonly spellcheck="false"></textarea>
-    <label class="checkbox-row">
-      <input type="checkbox" id="include-code-check">
-      <span>Include a board code (lets someone load your exact board to help — makes the text longer)</span>
-    </label>
     <div class="panel-actions">
       <button class="btn-ghost" id="share-close">Close</button>
       <button class="btn-primary" id="share-copy">Copy</button>
     </div>
 
     <div class="panel-divider"></div>
-    <h2 style="font-size:18px;">Load a board code</h2>
-    <p class="desc">Paste a code someone sent you (or one you saved earlier) — you can paste the whole shared message or just the code line. The board loads paused so you can look it over first.</p>
-    <textarea id="load-text" placeholder="Paste a board code or a full shared message here…" spellcheck="false"></textarea>
+    <h2 style="font-size:18px;">Load from shared text</h2>
+    <p class="desc">Paste a SPILL share message someone sent you (or one you saved earlier). The board loads paused so you can look it over first.</p>
+    <textarea id="load-text" placeholder="Paste a SPILL share message here…" spellcheck="false"></textarea>
     <div class="panel-actions">
       <button class="btn-primary" id="load-btn">Load board</button>
     </div>
@@ -471,12 +512,12 @@
       <li><b>Drag tiles</b> — from tray to felt, or rearrange freely on the felt.</li>
       <li><b>Select multiple</b> — click tiles to select them (they'll glow gold), then drag any of them to move the whole group together. Click empty space to clear the selection.</li>
       <li><b>↻ Rotate</b> — select 2 or more placed tiles, then rotate that shape 90° in place.</li>
-      <li><b>Right-click and hold</b> on the felt to pan around the grid.</li>
+      <li><b>Pan the felt</b> — drag on empty felt (or right-click-hold on desktop) to scroll around the grid. A tap on empty felt with no drag clears your selection.</li>
       <li><b>⏸ Pause</b> — freezes the spill countdown; you can keep rearranging while paused.</li>
       <li><b>🎲 Draw now</b> — get your next spill of tiles immediately instead of waiting.</li>
       <li><b>♻ Dump 1→3</b> — select one tray tile and trade it for three fresh ones. Off-limits once only 3 tiles remain in the bag.</li>
       <li><b>📖 Dictionary</b> — toggle word-checking on/off, and choose between the NZ dictionary (English + common te reo words like kia ora, whānau, kai) or a smaller common-words-only list.</li>
-      <li><b>💾 Share &amp; save</b> — copy a text snapshot with a board code, or paste a code to load any saved or shared board.</li>
+      <li><b>💾 Share &amp; save</b> — copies a plain-text snapshot of your board, tray, and settings. Paste that same text back in under "Load from shared text" to restore it — no special code needed.</li>
       <li><b>Tile pool</b> (in settings) — shrink the bag to simulate a shorter game for 2–8 players.</li>
     </ul>
     <div class="panel-actions">
@@ -530,7 +571,8 @@ const overlay = document.getElementById('overlay');
 const shareOverlay = document.getElementById('share-overlay');
 const helpOverlay = document.getElementById('help-overlay');
 const wordsListEl = document.getElementById('words-list');
-const wordsHeading = document.getElementById('words-heading');
+const wordsHeading = document.getElementById('words-count-text');
+const wordsPanel = document.getElementById('words-panel');
 const toastEl = document.getElementById('toast');
 const pauseBtn = document.getElementById('pause-btn');
 const drawNowBtn = document.getElementById('drawnow-btn');
@@ -539,6 +581,9 @@ const rotateBtn = document.getElementById('rotate-btn');
 const shareBtn = document.getElementById('share-btn');
 const dictToggleBtn = document.getElementById('dict-toggle');
 const dictTierSelect = document.getElementById('dict-tier');
+const controlsPanel = document.getElementById('controls-panel');
+const controlsToggleBtn = document.getElementById('controls-toggle-btn');
+const wordsHeadingBtn = document.getElementById('words-heading');
 
 gridEl.style.setProperty('--cols', COLS);
 gridEl.style.setProperty('--rows', ROWS);
@@ -815,39 +860,54 @@ function endDrag(ev){
   afterBoardChange();
 }
 
-/* ============ CLICK-TO-DESELECT ON BACKGROUND ============ */
-mainEl.addEventListener('pointerdown', (e)=>{
-  if(e.button !== 0) return;
-  if(!e.target.closest('.tile')) clearSelection();
-});
+/* ============ BACKGROUND: DRAG TO PAN THE FELT, TAP TO DESELECT ============ */
+mainEl.addEventListener('contextmenu', e => e.preventDefault());
 document.getElementById('tray-wrap').addEventListener('pointerdown', (e)=>{
   if(e.button !== 0) return;
   if(!e.target.closest('.tile')) clearSelection();
 });
 
-/* ============ RIGHT-CLICK-HOLD TO PAN THE FELT ============ */
-mainEl.addEventListener('contextmenu', e => e.preventDefault());
-let panning = false, panStart = {x:0,y:0,scrollLeft:0,scrollTop:0};
+let panning = false, panMoved = false, panPointerId = null;
+let panStart = {x:0,y:0,scrollLeft:0,scrollTop:0};
+
+function beginPan(e){
+  panning = true;
+  panMoved = false;
+  panPointerId = e.pointerId;
+  panStart = { x:e.clientX, y:e.clientY, scrollLeft: mainEl.scrollLeft, scrollTop: mainEl.scrollTop };
+  try{ mainEl.setPointerCapture(e.pointerId); }catch(err){}
+}
 mainEl.addEventListener('pointerdown', (e)=>{
+  const onTile = !!e.target.closest('.tile');
   if(e.button === 2){
-    panning = true;
-    panStart = { x:e.clientX, y:e.clientY, scrollLeft: mainEl.scrollLeft, scrollTop: mainEl.scrollTop };
-    try{ mainEl.setPointerCapture(e.pointerId); }catch(err){}
-    mainEl.classList.add('panning');
+    beginPan(e);
     e.preventDefault();
+    return;
   }
+  if(e.button !== 0 || onTile) return;
+  // Left click / touch on empty felt — could turn into a pan (drag) or a tap (deselect).
+  beginPan(e);
 });
 mainEl.addEventListener('pointermove', (e)=>{
-  if(!panning) return;
-  mainEl.scrollLeft = panStart.scrollLeft - (e.clientX - panStart.x);
-  mainEl.scrollTop = panStart.scrollTop - (e.clientY - panStart.y);
+  if(!panning || e.pointerId !== panPointerId) return;
+  const dx = e.clientX - panStart.x, dy = e.clientY - panStart.y;
+  if(!panMoved && Math.hypot(dx,dy) > 4){
+    panMoved = true;
+    mainEl.classList.add('panning');
+  }
+  if(panMoved){
+    mainEl.scrollLeft = panStart.scrollLeft - dx;
+    mainEl.scrollTop = panStart.scrollTop - dy;
+  }
 });
 function endPan(e){
-  if(panning){
-    panning = false;
-    mainEl.classList.remove('panning');
-    try{ mainEl.releasePointerCapture(e.pointerId); }catch(err){}
-  }
+  if(!panning || e.pointerId !== panPointerId) return;
+  const wasMoved = panMoved;
+  panning = false;
+  panMoved = false;
+  mainEl.classList.remove('panning');
+  try{ mainEl.releasePointerCapture(e.pointerId); }catch(err){}
+  if(!wasMoved && !e.target.closest('.tile')) clearSelection();
 }
 mainEl.addEventListener('pointerup', endPan);
 mainEl.addEventListener('pointercancel', endPan);
@@ -1076,8 +1136,14 @@ function showToast(msg){
   toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 2200);
 }
 
-/* ============ SHARE ============ */
-function buildShareText(includeCode){
+/* ============ SHARE / SAVE / LOAD — plain text, no code ============
+   The shared text itself is the save format: a labeled stats line, a
+   "Board:" grid (trimmed to its bounding box, '.' for empty cells), a
+   "Tray:" line, and a "Settings:" line. Loading re-parses that same text,
+   so there's nothing opaque to keep short — copy, save, or send as-is. */
+const PLAY_LINK = 'https://kovnein.github.io/odds-n-ends/projects/spill.html';
+
+function buildShareText(){
   const map = readGridLetters();
   const keys = Object.keys(map);
   let gridText = '(no tiles placed yet)';
@@ -1093,141 +1159,128 @@ function buildShareText(includeCode){
       let line='';
       for(let c=minC;c<=maxC;c++){
         const t = map[r+','+c];
-        line += t ? t.dataset.letter : '·';
+        line += t ? t.dataset.letter : '.';
       }
       lines.push(line);
     }
     gridText = lines.join('\n');
   }
+  const trayLetters = [...trayEl.querySelectorAll('.tile')].map(t => t.dataset.letter);
   const words = wordsListEl.querySelectorAll('.word-chip').length;
   const tilesPlaced = keys.length;
   const mins = Math.floor(playSeconds/60), secs = playSeconds%60;
   const timeStr = mins+':'+String(secs).padStart(2,'0');
-  const statsLine = `SPILL — ${words} words | ${tilesPlaced} tiles placed | ${timeStr} played | ${dumpsUsed} dumps | ${bag.length} left in bag`;
-  let out = `${statsLine}\n\n${gridText}`;
-  if(includeCode){
-    const code = encodeState();
-    out += `\n\nBoard code: ${code}\n(paste into "Load a board code" in SPILL to open this exact board)`;
-  }
-  out += `\n\nPlay SPILL: kovnein.github.io/odds-n-ends/projects/spill.html`;
-  return out;
+
+  const statsLine = `SPILL — ${words} words · ${tilesPlaced} tiles placed · ${timeStr} played · ${dumpsUsed} dumps · ${bag.length} tiles left in bag`;
+  const trayLine = `Tray: ${trayLetters.length ? trayLetters.join(' ') : '(empty)'}`;
+  const settingsLine = `Settings: start ${settings.start}, first spill ${settings.delay}s, then every ${settings.interval}s, +${settings.count} tile/spill, pool ${settings.poolSize}`;
+  const dictLine = `Dictionary: ${dictTier === 'common' ? 'Common' : 'NZ'}, ${dictEnabled ? 'on' : 'off'}`;
+
+  return `${statsLine}\n\nBoard:\n${gridText}\n\n${trayLine}\n\n${settingsLine}\n${dictLine}\n\nPlay SPILL: ${PLAY_LINK}`;
 }
 
-/* ============ STATE CODE (save / share-for-help / load) ============
-   Compact pipe-delimited format, base64-wrapped, so codes stay short to share:
-   v|minR|minC|W|H|gridChars|tray|bagCount|start|delay|interval|count|poolSize|
-   secondsLeft|fuseTotal|playSeconds|dumpsUsed|dictEnabled|dictTier|gameOver
-   The exact remaining bag letters are NOT stored (that's most of what made
-   earlier codes long) — only the count. On load, the bag is regenerated
-   randomly from the tiles not currently in play, sized to that count. */
-function encodeState(){
-  const map = readGridLetters();
-  const keys = Object.keys(map);
-  let minR=0, minC=0, W=0, H=0, gridChars='';
-  if(keys.length){
-    let maxR=-Infinity, maxC=-Infinity;
-    minR=Infinity; minC=Infinity;
-    keys.forEach(k=>{
-      const [r,c] = k.split(',').map(Number);
-      minR=Math.min(minR,r); maxR=Math.max(maxR,r);
-      minC=Math.min(minC,c); maxC=Math.max(maxC,c);
-    });
-    W = maxC-minC+1; H = maxR-minR+1;
-    const rows = [];
-    for(let r=minR;r<=maxR;r++){
-      let row='';
-      for(let c=minC;c<=maxC;c++){
-        row += map[r+','+c] ? map[r+','+c].dataset.letter : '.';
+/* Parse a SPILL share block (or a hand-trimmed piece of one) back into a
+   loadable state. Missing sections fall back to sensible defaults so a
+   partially-pasted message still loads what it can. */
+function parseShareText(text){
+  const lines = text.split(/\r?\n/);
+  const boardIdx = lines.findIndex(l => /^Board:\s*$/i.test(l.trim()));
+  const gridLines = [];
+  if(boardIdx !== -1){
+    for(let i=boardIdx+1;i<lines.length;i++){
+      const raw = lines[i];
+      const trimmed = raw.trim();
+      if(trimmed.length > 0 && /^[A-Za-z.]+$/.test(trimmed)){
+        gridLines.push(trimmed.toUpperCase());
+      } else {
+        break;
       }
-      rows.push(row);
     }
-    gridChars = rows.join('');
   }
-  const tray = [...trayEl.querySelectorAll('.tile')].map(t => t.dataset.letter).join('');
-  const fields = [
-    1, minR, minC, W, H, gridChars, tray, bag.length,
-    settings.start, settings.delay, settings.interval, settings.count, settings.poolSize,
-    secondsLeft, fuseTotal, playSeconds, dumpsUsed,
-    dictEnabled ? 1 : 0, dictTier === 'common' ? 'c' : 'n', gameOver ? 1 : 0
-  ];
-  try{
-    return btoa(fields.join('|'));
-  } catch(err){
-    return '';
-  }
-}
-function decodeState(code){
-  const parts = atob(code.trim()).split('|');
-  const [v, minR, minC, W, H, gridChars, tray, bagCount,
-    start, delay, interval, count, poolSize,
-    secondsLeft, fuseTotal, playSeconds, dumpsUsed,
-    dictEnabled, dictTier, gameOver] = parts;
+  const width = gridLines.length ? Math.max(...gridLines.map(l => l.length)) : 0;
+  const height = gridLines.length;
   const grid = [];
-  const w = parseInt(W,10), h = parseInt(H,10);
-  if(w>0 && h>0){
-    for(let i=0;i<gridChars.length;i++){
-      const ch = gridChars[i];
-      if(ch !== '.'){
-        const r = parseInt(minR,10) + Math.floor(i/w);
-        const c = parseInt(minC,10) + (i % w);
-        grid.push([r, c, ch]);
-      }
+  gridLines.forEach((line, r)=>{
+    for(let c=0;c<line.length;c++){
+      const ch = line[c];
+      if(ch !== '.') grid.push([r, c, ch]);
     }
-  }
+  });
+
+  const trayMatch = text.match(/Tray:\s*(.*)/i);
+  const trayRaw = trayMatch ? trayMatch[1] : '';
+  const tray = /\(empty\)/i.test(trayRaw) ? [] : trayRaw.replace(/[^A-Za-z]/g,'').toUpperCase().split('').filter(Boolean);
+
+  const bagMatch = text.match(/(\d+)\s+tiles?\s+left in bag/i);
+  const dumpsMatch = text.match(/(\d+)\s+dumps?/i);
+  const playedMatch = text.match(/(\d+):(\d{2})\s+played/i);
+
+  const startMatch = text.match(/start\s+(\d+)/i);
+  const delayMatch = text.match(/first spill\s+(\d+)s/i);
+  const intervalMatch = text.match(/every\s+(\d+)s/i);
+  const countMatch = text.match(/\+(\d+)\s+tile/i);
+  const poolMatch = text.match(/pool\s+(\d+)/i);
+  const dictMatch = text.match(/Dictionary:\s*(NZ|Common)\w*,\s*(on|off)/i);
+
   return {
-    grid,
-    tray: tray ? tray.split('') : [],
-    bagCount: parseInt(bagCount,10) || 0,
+    grid, width, height, tray,
+    bagCount: bagMatch ? parseInt(bagMatch[1],10) : 0,
+    dumpsUsed: dumpsMatch ? parseInt(dumpsMatch[1],10) : 0,
+    playSeconds: playedMatch ? (parseInt(playedMatch[1],10)*60 + parseInt(playedMatch[2],10)) : 0,
     settings: {
-      start: parseInt(start,10), delay: parseInt(delay,10), interval: parseInt(interval,10),
-      count: parseInt(count,10), poolSize: parseInt(poolSize,10)
+      start: startMatch ? parseInt(startMatch[1],10) : settings.start,
+      delay: delayMatch ? parseInt(delayMatch[1],10) : settings.delay,
+      interval: intervalMatch ? parseInt(intervalMatch[1],10) : settings.interval,
+      count: countMatch ? parseInt(countMatch[1],10) : settings.count,
+      poolSize: poolMatch ? parseInt(poolMatch[1],10) : settings.poolSize
     },
-    secondsLeft: parseInt(secondsLeft,10),
-    fuseTotal: parseInt(fuseTotal,10),
-    playSeconds: parseInt(playSeconds,10) || 0,
-    dumpsUsed: parseInt(dumpsUsed,10) || 0,
-    dictEnabled: dictEnabled === '1',
-    dictTier: dictTier === 'c' ? 'common' : 'nz',
-    gameOver: gameOver === '1'
+    dictTier: dictMatch && dictMatch[1].toLowerCase() === 'common' ? 'common' : 'nz',
+    dictEnabled: dictMatch ? dictMatch[2].toLowerCase() === 'on' : true
   };
 }
-function extractCode(pasted){
-  const m = pasted.match(/Board code:\s*(\S+)/);
-  return (m ? m[1] : pasted).trim();
-}
-function loadState(state){
+
+function loadFromText(raw){
+  const parsed = parseShareText(raw);
+  if(parsed.grid.length === 0 && parsed.tray.length === 0){
+    throw new Error('No board found in that text');
+  }
   clearInterval(timerHandle);
   clearBoard();
 
-  settings = state.settings || settings;
-  (state.grid || []).forEach(([r,c,letter])=>{
-    if(r>=0 && r<ROWS && c>=0 && c<COLS) cellAt(r,c).appendChild(makeTile(letter));
+  settings = parsed.settings;
+
+  // Recenter the parsed bounding box in the middle of the felt — absolute
+  // position isn't stored, only the trimmed shape, so this is where "loaded"
+  // boards land.
+  const offR = Math.max(0, Math.floor((ROWS - parsed.height) / 2));
+  const offC = Math.max(0, Math.floor((COLS - parsed.width) / 2));
+  parsed.grid.forEach(([r,c,letter])=>{
+    const rr = offR + r, cc = offC + c;
+    if(rr>=0 && rr<ROWS && cc>=0 && cc<COLS) cellAt(rr,cc).appendChild(makeTile(letter));
   });
-  (state.tray || []).forEach(letter => trayEl.appendChild(makeTile(letter)));
+  parsed.tray.forEach(letter => trayEl.appendChild(makeTile(letter)));
 
   // Regenerate the remaining bag: tiles not currently in play, trimmed to the saved count.
   const regenerated = getDumpPool();
   shuffleArray(regenerated);
-  bag = regenerated.slice(0, state.bagCount || 0);
+  bag = regenerated.slice(0, parsed.bagCount);
 
-  playSeconds = state.playSeconds || 0;
-  dumpsUsed = state.dumpsUsed || 0;
-  dictEnabled = state.dictEnabled !== undefined ? state.dictEnabled : true;
-  dictTier = state.dictTier || 'nz';
+  playSeconds = parsed.playSeconds;
+  dumpsUsed = parsed.dumpsUsed;
+  dictEnabled = parsed.dictEnabled;
+  dictTier = parsed.dictTier;
   dictToggleBtn.textContent = dictEnabled ? '📖 Dictionary: On' : '📖 Dictionary: Off';
   dictToggleBtn.classList.toggle('on', dictEnabled);
   dictTierSelect.value = dictTier;
 
   gameStarted = true;
-  gameOver = !!state.gameOver;
+  gameOver = false;
   paused = true;
   pauseBtn.textContent = '▶ Resume';
-  secondsLeft = state.secondsLeft || (state.settings && state.settings.interval) || 45;
-  fuseTotal = state.fuseTotal || secondsLeft || 45;
+  secondsLeft = settings.interval;
+  fuseTotal = settings.interval;
   updateFuse();
-  fuseLabel.textContent = gameOver
-    ? "Loaded a finished board."
-    : `Loaded — paused, ${secondsLeft}s left till next spill. Hit Resume when ready.`;
+  fuseLabel.textContent = `Loaded — paused, ${secondsLeft}s left till next spill. Hit Resume when ready.`;
 
   overlay.classList.add('hidden');
   updateCounts();
@@ -1319,14 +1372,14 @@ document.getElementById('start-btn').addEventListener('click', ()=>{
 
 document.getElementById('settings-btn').addEventListener('click', ()=>{
   if(gameStarted && !gameOver){
-    const ok = confirm("You have a game in progress. Opening settings and starting a new game will clear your current board — you can copy a board code first from Share & save if you want to keep it. Continue?");
+    const ok = confirm("You have a game in progress. Opening settings and starting a new game will clear your current board — copy it first from Share & save if you want to keep it. Continue?");
     if(!ok) return;
   }
   overlay.classList.remove('hidden');
 });
 document.getElementById('newgame-btn').addEventListener('click', ()=>{
   if(gameStarted && !gameOver){
-    const ok = confirm("This clears your current board. Copy a board code from Share & save first if you want to keep it. Continue?");
+    const ok = confirm("This clears your current board. Copy it from Share & save first if you want to keep it. Continue?");
     if(!ok) return;
   }
   resetToSetup();
@@ -1355,16 +1408,10 @@ dictTierSelect.addEventListener('change', (e)=>{
   recomputeWords();
 });
 
-const includeCodeCheck = document.getElementById('include-code-check');
-function refreshShareText(){
-  document.getElementById('share-text').value = buildShareText(includeCodeCheck.checked);
-}
 shareBtn.addEventListener('click', ()=>{
-  includeCodeCheck.checked = false;
-  refreshShareText();
+  document.getElementById('share-text').value = buildShareText();
   shareOverlay.classList.remove('hidden');
 });
-includeCodeCheck.addEventListener('change', refreshShareText);
 document.getElementById('share-close').addEventListener('click', ()=>{
   shareOverlay.classList.add('hidden');
 });
@@ -1381,16 +1428,14 @@ document.getElementById('share-copy').addEventListener('click', ()=>{
 
 document.getElementById('load-btn').addEventListener('click', ()=>{
   const raw = document.getElementById('load-text').value;
-  if(!raw || !raw.trim()){ showToast('Paste a board code first'); return; }
+  if(!raw || !raw.trim()){ showToast('Paste a shared board first'); return; }
   try{
-    const code = extractCode(raw);
-    const state = decodeState(code);
-    loadState(state);
+    loadFromText(raw);
     shareOverlay.classList.add('hidden');
     document.getElementById('load-text').value = '';
     showToast('Board loaded — paused, hit Resume when ready');
   } catch(err){
-    showToast("That code doesn't look right");
+    showToast("Couldn't find a board in that text");
   }
 });
 
@@ -1407,11 +1452,29 @@ document.getElementById('help-close').addEventListener('click', ()=>{
   helpOverlay.classList.add('hidden');
 });
 
+/* ============ COLLAPSIBLE HEADER CONTROLS & WORDS PANEL (mobile-friendly) ============ */
+function setControlsCollapsed(collapsed){
+  controlsPanel.classList.toggle('collapsed', collapsed);
+  controlsToggleBtn.classList.toggle('collapsed', collapsed);
+}
+controlsToggleBtn.addEventListener('click', ()=>{
+  setControlsCollapsed(!controlsPanel.classList.contains('collapsed'));
+});
+function setWordsCollapsed(collapsed){
+  wordsPanel.classList.toggle('collapsed', collapsed);
+}
+wordsHeadingBtn.addEventListener('click', ()=>{
+  setWordsCollapsed(!wordsPanel.classList.contains('collapsed'));
+});
+
 /* ============ INIT ============ */
 buildGrid();
 buildBag();
 updateCounts();
 updateActionButtons();
+const isMobileStart = window.matchMedia('(max-width: 640px)').matches;
+setControlsCollapsed(isMobileStart);
+setWordsCollapsed(isMobileStart);
 </script>
 </body>
 </html>
