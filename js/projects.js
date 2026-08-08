@@ -75,6 +75,15 @@ const PROJECTS = [
     tags: ["single-file", "productivity"]
   },
 
+  {
+    title: "SPILL - Tile based word game",
+    description: "A tile based word game inspired by Banangrams. Touchscreen support in development.",
+    lang: "html",
+    status: "live",
+    repo: "",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/spill.html",
+    tags: ["single-file", "game", "in-development"]
+  },
 
   {
     title: "The Fold - Temporal Loop Horror",
