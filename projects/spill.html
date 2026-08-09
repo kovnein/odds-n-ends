@@ -222,15 +222,14 @@
 
   .cell .tile{ position:absolute; top:1px; left:1px; }
 
-  /* ---------- FLOATING ACTION BUTTONS ---------- */
+  /* ---------- FLOATING ACTION BUTTONS (fixed to viewport, not the scrolling felt) ---------- */
   .fab-cluster{
-    position:absolute;
-    bottom:14px;
+    position:fixed;
+    left:14px;
+    bottom:14px; /* JS keeps this synced above the tray, which can resize */
     display:flex; flex-direction:column; gap:8px;
-    z-index:20;
+    z-index:30;
   }
-  .fab-left{ left:14px; }
-  .fab-right{ right:14px; align-items:center; }
   .fab-btn{
     width:44px; height:44px; border-radius:50%;
     background: var(--ivory); color: var(--ink);
@@ -242,13 +241,6 @@
   .fab-btn:hover{ filter:brightness(1.05); }
   .fab-btn:disabled{ opacity:0.35; cursor:not-allowed; box-shadow:none; }
   .fab-btn.on{ background: var(--marigold); }
-  .zoom-label{
-    font-family: var(--mono); font-size:10px; font-weight:700;
-    color: var(--ivory); background: rgba(22,40,31,0.85);
-    border: 1px solid rgba(244,235,217,0.18);
-    border-radius: 999px; padding: 3px 7px;
-    white-space:nowrap;
-  }
 
   /* ---------- TRAY ---------- */
   #tray-wrap{
@@ -342,6 +334,15 @@
     font-family: var(--display); font-style:italic; font-weight:700;
     margin: 0 0 4px; font-size:24px;
   }
+  .panel-head{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  }
+  .panel-close{
+    background:none; border:none; color:#7a705f;
+    font-size:16px; line-height:1; padding:4px; margin-top:2px;
+    flex:0 0 auto;
+  }
+  .panel-close:hover{ color: var(--ink); }
   .panel p.desc{ margin: 0 0 18px; font-size:13px; color:#5b5142; }
   .field{ margin-bottom: 14px; }
   .field label{
@@ -402,8 +403,7 @@
     .tray-title{ font-size:10px; }
     #tray-wrap{ padding:4px 10px 10px; }
     .fab-btn{ width:40px; height:40px; font-size:16px; }
-    .fab-left{ left:8px; bottom:8px; }
-    .fab-right{ right:8px; bottom:8px; }
+    .fab-cluster{ left:8px; }
   }
 </style>
 </head>
@@ -428,25 +428,18 @@
 
   <main id="main">
     <div id="grid"></div>
-    <div id="words-panel">
+    <div id="words-panel" class="no-pan">
       <h3 id="words-heading"><span id="words-count-text">Words on the felt (0)</span><span class="panel-caret">▾</span></h3>
       <div id="words-list"></div>
     </div>
-
-    <div id="fab-actions" class="fab-cluster fab-left">
-      <button class="fab-btn" id="pause-btn" disabled title="Pause">⏸</button>
-      <button class="fab-btn" id="drawnow-btn" disabled title="Draw the next spill right now">🎲</button>
-      <button class="fab-btn" id="dump-btn" disabled title="Select one tray tile, then dump it for 3 new ones">♻</button>
-      <button class="fab-btn" id="rotate-btn" disabled title="Select 2+ placed tiles, then rotate that shape 90°">↻</button>
-    </div>
-
-    <div id="fab-zoom" class="fab-cluster fab-right">
-      <button class="fab-btn" id="zoom-in-btn" title="Zoom in">＋</button>
-      <div class="zoom-label" id="zoom-label">100%</div>
-      <button class="fab-btn" id="zoom-out-btn" title="Zoom out">－</button>
-      <button class="fab-btn" id="zoom-reset-btn" title="Reset zoom">⟲</button>
-    </div>
   </main>
+
+  <div id="fab-actions" class="fab-cluster no-pan">
+    <button class="fab-btn" id="pause-btn" disabled title="Pause">⏸</button>
+    <button class="fab-btn" id="drawnow-btn" disabled title="Draw the next spill right now">🎲</button>
+    <button class="fab-btn" id="dump-btn" disabled title="Select one tray tile, then dump it for 3 new ones">♻</button>
+    <button class="fab-btn" id="rotate-btn" disabled title="Select 2+ placed tiles, then rotate that shape 90°">↻</button>
+  </div>
 
   <div id="tray-wrap">
     <div class="tray-handle" id="tray-handle" title="Drag to resize the tray"></div>
@@ -461,7 +454,10 @@
 
 <div id="overlay" class="overlay">
   <div class="panel">
-    <h2 id="setup-heading">Set up your spill</h2>
+    <div class="panel-head">
+      <h2 id="setup-heading">Set up your spill</h2>
+      <button class="panel-close" id="setup-close-btn" title="Close">✕</button>
+    </div>
     <p class="desc">SPILL draws you a starting hand of letter tiles. After a countdown, more tiles spill into your tray — then again every interval after that. Build real words on the felt before the bag runs dry.</p>
 
     <div class="field">
@@ -619,7 +615,6 @@ const wordsHeadingBtn = document.getElementById('words-heading');
 const setupHeading = document.getElementById('setup-heading');
 const trayWrapEl = document.getElementById('tray-wrap');
 const trayHandle = document.getElementById('tray-handle');
-const zoomLabel = document.getElementById('zoom-label');
 
 gridEl.style.setProperty('--cols', COLS);
 gridEl.style.setProperty('--rows', ROWS);
@@ -922,6 +917,7 @@ function beginPan(e){
   try{ mainEl.setPointerCapture(e.pointerId); }catch(err){}
 }
 mainEl.addEventListener('pointerdown', (e)=>{
+  if(e.target.closest('.no-pan')) return; // let overlays/panels inside #main handle their own clicks
   if(e.pointerType === 'touch'){
     activeTouches.set(e.pointerId, {x:e.clientX, y:e.clientY});
     if(activeTouches.size === 2){
@@ -1142,10 +1138,10 @@ function togglePause(){
   paused = !paused;
   if(paused){
     clearInterval(timerHandle);
-    pauseBtn.textContent = '▶ Resume';
+    pauseBtn.textContent = '▶';
     fuseLabel.textContent = `Paused — ${secondsLeft}s left till next spill`;
   } else {
-    pauseBtn.textContent = '⏸ Pause';
+    pauseBtn.textContent = '⏸';
     timerHandle = setInterval(tick, 1000);
     fuseLabel.textContent = `Next spill in ${secondsLeft}s — ${bag.length} tiles left in the bag`;
   }
@@ -1212,10 +1208,30 @@ function showToast(msg){
 
 /* ============ SHARE / SAVE / LOAD — plain text, no code ============
    The shared text itself is the save format: a labeled stats line, a
-   "Board:" grid (trimmed to its bounding box, '.' for empty cells), a
-   "Tray:" line, and a "Settings:" line. Loading re-parses that same text,
-   so there's nothing opaque to keep short — copy, save, or send as-is. */
+   "Board:" grid (trimmed to its bounding box), a "Tray:" line, and a
+   "Settings:" line. Loading re-parses that same text, so there's nothing
+   opaque to keep short — copy, save, or send as-is.
+
+   The board grid uses fullwidth Unicode letters (Ａ Ｂ Ｃ…) and a fullwidth
+   middle dot (・) for empty cells instead of plain ASCII. Most messaging
+   apps render text in a proportional font, which breaks column alignment
+   for an ASCII grid ('I' is narrower than 'W'). Fullwidth characters are
+   designed to occupy a consistent double-width cell in virtually any font,
+   so the grid stays lined up even outside a monospace context. */
 const PLAY_LINK = 'https://kovnein.github.io/odds-n-ends/projects/spill.html';
+const FULLWIDTH_OFFSET = 0xFF21 - 65; // 'A' (65) -> 'Ａ' (0xFF21)
+const EMPTY_CELL_CHAR = '・';
+function toFullwidth(ch){
+  const code = ch.charCodeAt(0);
+  if(code >= 65 && code <= 90) return String.fromCharCode(code + FULLWIDTH_OFFSET);
+  return ch;
+}
+function fromFullwidthChar(ch){
+  if(ch === EMPTY_CELL_CHAR || ch === '.') return '.';
+  const code = ch.charCodeAt(0);
+  if(code >= 0xFF21 && code <= 0xFF3A) return String.fromCharCode(code - FULLWIDTH_OFFSET);
+  return ch.toUpperCase();
+}
 
 function buildShareText(){
   const map = readGridLetters();
@@ -1233,7 +1249,7 @@ function buildShareText(){
       let line='';
       for(let c=minC;c<=maxC;c++){
         const t = map[r+','+c];
-        line += t ? t.dataset.letter : '.';
+        line += t ? toFullwidth(t.dataset.letter) : EMPTY_CELL_CHAR;
       }
       lines.push(line);
     }
@@ -1255,17 +1271,20 @@ function buildShareText(){
 
 /* Parse a SPILL share block (or a hand-trimmed piece of one) back into a
    loadable state. Missing sections fall back to sensible defaults so a
-   partially-pasted message still loads what it can. */
+   partially-pasted message still loads what it can. Accepts both the
+   fullwidth grid format above and plain ASCII (A-Z / '.'), so older saves
+   or a hand-typed board still load. */
 function parseShareText(text){
   const lines = text.split(/\r?\n/);
   const boardIdx = lines.findIndex(l => /^Board:\s*$/i.test(l.trim()));
   const gridLines = [];
+  const gridLineRe = /^[A-Za-z.\uFF21-\uFF3A\u30FB]+$/;
   if(boardIdx !== -1){
     for(let i=boardIdx+1;i<lines.length;i++){
       const raw = lines[i];
       const trimmed = raw.trim();
-      if(trimmed.length > 0 && /^[A-Za-z.]+$/.test(trimmed)){
-        gridLines.push(trimmed.toUpperCase());
+      if(trimmed.length > 0 && gridLineRe.test(trimmed)){
+        gridLines.push(trimmed);
       } else {
         break;
       }
@@ -1276,7 +1295,7 @@ function parseShareText(text){
   const grid = [];
   gridLines.forEach((line, r)=>{
     for(let c=0;c<line.length;c++){
-      const ch = line[c];
+      const ch = fromFullwidthChar(line[c]);
       if(ch !== '.') grid.push([r, c, ch]);
     }
   });
@@ -1348,7 +1367,7 @@ function loadFromText(raw){
   gameStarted = true;
   gameOver = false;
   paused = true;
-  pauseBtn.textContent = '▶ Resume';
+  pauseBtn.textContent = '▶';
   secondsLeft = settings.interval;
   fuseTotal = settings.interval;
   updateFuse();
@@ -1385,7 +1404,7 @@ function startGame(){
   paused = false;
   playSeconds = 0;
   dumpsUsed = 0;
-  pauseBtn.textContent = '⏸ Pause';
+  pauseBtn.textContent = '⏸';
   const hand = drawFromBag(settings.start);
   hand.forEach(letter => trayEl.appendChild(makeTile(letter)));
   updateCounts();
@@ -1433,6 +1452,9 @@ document.getElementById('settings-btn').addEventListener('click', ()=>{
   document.getElementById('start-btn').textContent = (gameStarted && !gameOver)
     ? 'Restart with these settings' : 'Draw hand & start';
   overlay.classList.remove('hidden');
+});
+document.getElementById('setup-close-btn').addEventListener('click', ()=>{
+  overlay.classList.add('hidden');
 });
 document.getElementById('shuffle-btn').addEventListener('click', ()=>{
   const tiles = [...trayEl.querySelectorAll('.tile')];
@@ -1505,21 +1527,10 @@ wordsHeadingBtn.addEventListener('click', ()=>{
   setWordsCollapsed(!wordsPanel.classList.contains('collapsed'));
 });
 
-/* ============ ZOOM (buttons + pinch) ============ */
+/* ============ ZOOM (pinch-to-zoom on the felt; see pan/pinch handlers above) ============ */
 function applyZoom(){
   gridEl.style.zoom = zoomLevel;
-  zoomLabel.textContent = Math.round(zoomLevel*100) + '%';
 }
-function zoomBy(delta){
-  zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, +(zoomLevel+delta).toFixed(2)));
-  applyZoom();
-}
-document.getElementById('zoom-in-btn').addEventListener('click', ()=> zoomBy(ZOOM_STEP));
-document.getElementById('zoom-out-btn').addEventListener('click', ()=> zoomBy(-ZOOM_STEP));
-document.getElementById('zoom-reset-btn').addEventListener('click', ()=>{
-  zoomLevel = 1;
-  applyZoom();
-});
 
 /* ============ TRAY RESIZE HANDLE ============ */
 let trayResizing = false, trayResizePointerId = null;
@@ -1539,14 +1550,25 @@ trayHandle.addEventListener('pointermove', (e)=>{
   const maxH = window.innerHeight * 0.7;
   newH = Math.max(90, Math.min(maxH, newH));
   trayWrapEl.style.height = newH + 'px';
+  syncFabPosition();
 });
 function endTrayResize(e){
   if(!trayResizing || e.pointerId !== trayResizePointerId) return;
   trayResizing = false;
   try{ trayHandle.releasePointerCapture(e.pointerId); }catch(err){}
+  syncFabPosition();
 }
 trayHandle.addEventListener('pointerup', endTrayResize);
 trayHandle.addEventListener('pointercancel', endTrayResize);
+
+/* ============ KEEP FLOATING BUTTONS PINNED ABOVE THE (RESIZABLE) TRAY ============ */
+const fabActionsEl = document.getElementById('fab-actions');
+function syncFabPosition(){
+  const gap = 14;
+  const bottom = trayWrapEl.getBoundingClientRect().height + gap;
+  fabActionsEl.style.bottom = bottom + 'px';
+}
+window.addEventListener('resize', syncFabPosition);
 
 /* ============ INIT ============ */
 buildGrid();
@@ -1554,8 +1576,10 @@ buildBag();
 updateCounts();
 updateActionButtons();
 applyZoom();
+syncFabPosition();
 const isMobileStart = window.matchMedia('(max-width: 640px)').matches;
 setWordsCollapsed(isMobileStart);
 </script>
 </body>
 </html>
+
