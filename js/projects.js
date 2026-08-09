@@ -77,12 +77,22 @@ const PROJECTS = [
 
   {
     title: "SPILL - Tile based word game",
-    description: "A tile based word game inspired by Banangrams. Touchscreen support in development.",
+    description: "A tile based word game inspired by Bananagrams.",
     lang: "html",
     status: "live",
     repo: "",
     demo: "https://kovnein.github.io/odds-n-ends/projects/spill.html",
     tags: ["single-file", "game", "in-development"]
+  },
+
+  {
+    title: "Wordchain - Finish the word game",
+    description: "A brain break word game where you chain words on the ends of other words.",
+    lang: "html",
+    status: "live",
+    repo: "",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/wordchain.html",
+    tags: ["single-file", "game"]
   },
 
   {
