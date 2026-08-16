@@ -670,6 +670,7 @@
       <label><input type="checkbox" id="lvl2" checked> Build-up words</label>
       <label><input type="checkbox" id="lvl3"> Tricky</label>
       <label><input type="checkbox" id="lvl4"> Challenging</label>
+      <label><input type="checkbox" id="lvl5" checked> Regionals</label>
     </div>
     <div class="volume-control">
       <svg id="volIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
@@ -684,6 +685,7 @@
 </div>
 
 <script>
+
 // NZ Spelling Bee word bank
 // Each word: { w: word, cat: category key, d: definition, s: example sentence, lvl: 1 (core list) or 2 (extension) }
 
@@ -933,7 +935,7 @@ const WORDS_SET_A = [
   { w: "hapu", cat: "tereo", lvl: 3, d: "A sub-tribe or clan, smaller than an iwi.", s: "Several hapu gathered at the marae for the occasion.", phon: "hah-poo" },
   { w: "whaikorero", cat: "tereo", lvl: 3, d: "Formal speech-making, especially during a ceremony on a marae.", s: "The elder began the whaikorero as visitors were welcomed.", phon: "fai-kaw-reh-roh" },
   { w: "rohe", cat: "tereo", lvl: 3, d: "A tribal area or territory.", s: "The project covered several towns within the iwi's rohe.", phon: "raw-heh" },
-  { w: "wharenui", cat: "tereo", lvl: 3, d: "A large meeting house on a marae, often carved.", s: "Visitors removed their shoes before entering the wharenui.", phon: "fah-reh-noo-e" },
+  { w: "wharenui", cat: "tereo", lvl: 3, d: "A large meeting house on a marae, often carved.", s: "Visitors removed their shoes before entering the wharenui.", phon: "fah-reh-noo-ee" },
 
   // GREEK ORIGIN
   { w: "rheumatism", cat: "greek", lvl: 3, d: "A condition causing pain and stiffness in joints and muscles.", s: "Cold, damp weather made her rheumatism flare up." },
@@ -1087,12 +1089,166 @@ const WORDS_SET_B = [
   { w: "parsimonious", cat: "adjectives", lvl: 4, d: "Extremely unwilling to spend money or use resources; very frugal.", s: "His parsimonious habits meant he rarely treated himself to anything." },
 ];
 
-if (typeof module !== "undefined") module.exports = { CATEGORIES, WORDS, WORDS_SET_A, WORDS_SET_B };
+
+// ===================================================================
+// REGIONAL LIST (lvl 5) — Official regional competition word list.
+// 100 words as given; 6 already exist in the app across other sets
+// (amphibian, protagonist, ambivalent, tikanga, imbroglio, silhouette)
+// and are excluded here to avoid duplicates. 94 new entries.
+// ===================================================================
+const WORDS_REGIONAL = [
+  // --- A ---
+  { w: "abdicate", cat: "current", lvl: 5, d: "To formally give up a high position of power or responsibility.", s: "The king chose to abdicate rather than face the crisis alone." },
+  { w: "abdomen", cat: "science", lvl: 5, d: "The part of the body between the chest and the pelvis.", s: "She felt a sharp pain in her abdomen after the fall." },
+  { w: "adherent", cat: "nouns", lvl: 5, d: "A person who supports a particular belief, cause, or leader.", s: "The movement gained hundreds of new adherents after the speech." },
+  { w: "adjuvant", cat: "science", lvl: 5, d: "A substance added to a medicine or vaccine to enhance its effect.", s: "The adjuvant in the vaccine helped the immune system respond more strongly." },
+  { w: "alchemy", cat: "greek", lvl: 5, d: "A medieval practice seeking to transform base metals into gold; any mysterious transformation.", s: "There was a kind of alchemy in the way she turned scraps into art." },
+  { w: "appurtenant", cat: "latin", lvl: 5, d: "Belonging or relating to another, more important thing; attached.", s: "The garage was appurtenant to the main property and could not be sold separately." },
+  { w: "aquiline", cat: "latin", lvl: 5, d: "Like an eagle; used especially to describe a sharply curved nose.", s: "His aquiline profile gave him a distinguished, hawk-like appearance." },
+  { w: "arbiter", cat: "latin", lvl: 5, d: "A person with ultimate authority to judge or settle a dispute.", s: "The committee would serve as the final arbiter of the competition." },
+  { w: "audacious", cat: "adjectives", lvl: 5, d: "Showing a willingness to take bold, surprising risks.", s: "The audacious plan worked, but only just." },
+
+  // --- B ---
+  { w: "ballistic", cat: "science", lvl: 5, d: "Relating to projectiles in flight; also used informally to mean furious.", s: "The scientist studied the ballistic arc of the projectile." },
+
+  // --- C ---
+  { w: "caldera", cat: "geography", lvl: 5, d: "A large volcanic crater formed when a volcano collapses inward.", s: "The lake sat inside an ancient caldera high in the mountains." },
+  { w: "chagrin", cat: "nouns", lvl: 5, d: "A feeling of annoyance or embarrassment at having failed.", s: "To her chagrin, she realised she had walked into the wrong room." },
+  { w: "cinnamon", cat: "nouns", lvl: 5, d: "A spice made from the dried bark of a tropical tree.", s: "She sprinkled cinnamon over the warm porridge." },
+  { w: "churlish", cat: "adjectives", lvl: 5, d: "Rude and mean-spirited; ungracious.", s: "It would be churlish to refuse such a generous offer." },
+  { w: "collaboration", cat: "nouns", lvl: 5, d: "The act of working jointly with others toward a shared goal.", s: "The mural was the result of a remarkable collaboration between twelve artists." },
+  { w: "coterie", cat: "nouns", lvl: 5, d: "A small, exclusive group of people with shared interests.", s: "A coterie of critics met weekly to discuss new films." },
+  { w: "credence", cat: "latin", lvl: 5, d: "Belief in or acceptance of something as true.", s: "The new evidence lent credence to her theory." },
+
+  // --- D ---
+  { w: "determinant", cat: "nouns", lvl: 5, d: "A factor that decides or strongly influences an outcome.", s: "Diet and exercise are key determinants of long-term health." },
+  { w: "diabolical", cat: "adjectives", lvl: 5, d: "Disgracefully bad, or belonging to the devil; fiendishly wicked.", s: "The villain's diabolical plan took everyone by surprise." },
+  { w: "diplomacy", cat: "current", lvl: 5, d: "The management of relations between countries; skill in handling situations without offending.", s: "It took considerable diplomacy to reach an agreement between the two sides." },
+  { w: "disavowal", cat: "nouns", lvl: 5, d: "A statement in which one denies knowledge of or responsibility for something.", s: "Her disavowal of the rumours came too late to stop the damage." },
+  { w: "dishevelled", cat: "adjectives", lvl: 5, d: "Untidy in appearance, especially of hair or clothing.", s: "He arrived late and dishevelled, clearly having run all the way." },
+  { w: "diurnal", cat: "adjectives", lvl: 5, d: "Active during the day rather than at night; relating to the day.", s: "Bees are diurnal insects, rarely seen after dark." },
+
+  // --- E ---
+  { w: "ecstatic", cat: "adjectives", lvl: 5, d: "Feeling or expressing overwhelming happiness or excitement.", s: "The crowd was ecstatic when the final whistle blew." },
+  { w: "embroider", cat: "nouns", lvl: 5, d: "To decorate fabric with needle and thread; also to add embellishments to a story.", s: "She loved to embroider small flowers onto the corners of handkerchiefs." },
+  { w: "enzyme", cat: "science", lvl: 5, d: "A protein produced by living organisms that speeds up chemical reactions.", s: "Digestive enzymes in the stomach break down food into smaller molecules." },
+  { w: "escarpment", cat: "geography", lvl: 5, d: "A steep slope or cliff separating two areas of different height.", s: "The road wound along the base of the escarpment for several kilometres." },
+  { w: "eulogy", cat: "literary", lvl: 5, d: "A speech or piece of writing that praises someone, especially one who has just died.", s: "His daughter delivered a moving eulogy at the funeral." },
+  { w: "exuberant", cat: "adjectives", lvl: 5, d: "Full of energy, excitement, and cheerfulness.", s: "The exuberant puppy knocked over the plant in its excitement." },
+  { w: "extrapolate", cat: "latin", lvl: 5, d: "To extend known data or trends to estimate unknown values or future outcomes.", s: "Scientists extrapolated from the current data to predict rainfall over the next decade." },
+
+  // --- F ---
+  { w: "fatigue", cat: "nouns", lvl: 5, d: "Extreme tiredness resulting from exertion; also weakness in materials from repeated stress.", s: "After three nights without sleep, the fatigue was overwhelming." },
+  { w: "fitness", cat: "nouns", lvl: 5, d: "The condition of being physically healthy and strong; suitability for a purpose.", s: "She trained daily to maintain her fitness before the competition." },
+  { w: "foible", cat: "nouns", lvl: 5, d: "A minor weakness or eccentricity in someone's character.", s: "His habit of humming while working was just one of his many foibles." },
+  { w: "frivolous", cat: "adjectives", lvl: 5, d: "Not having any serious purpose or value; carefree in a shallow way.", s: "The judge dismissed the frivolous complaint within minutes." },
+  { w: "fugitive", cat: "nouns", lvl: 5, d: "A person who has escaped and is trying to avoid being caught.", s: "The police searched the city for the fugitive for three days." },
+  { w: "fulsome", cat: "adjectives", lvl: 5, d: "Excessively complimentary; more than is necessary or genuine.", s: "The fulsome praise from his manager made the rest of the team uncomfortable." },
+
+  // --- G ---
+  { w: "glycaemic", cat: "science", lvl: 5, d: "Relating to the level of glucose in the blood.", s: "Foods with a high glycaemic index cause blood sugar to rise quickly." },
+  { w: "goddess", cat: "nouns", lvl: 5, d: "A female deity; a woman who is adored for her beauty or abilities.", s: "Athena was the goddess of wisdom in ancient Greek mythology." },
+  { w: "government", cat: "current", lvl: 5, d: "The group of people who govern a country or state.", s: "The government announced new funding for public transport." },
+  { w: "grievous", cat: "adjectives", lvl: 5, d: "Very severe or serious; causing great pain or suffering.", s: "The accident caused grievous injuries to several passengers." },
+
+  // --- H ---
+  { w: "halcyon", cat: "adjectives", lvl: 5, d: "Idyllically calm and peaceful; often used to describe a happy past time.", s: "She looked back on those halcyon summer days by the sea." },
+  { w: "hiatus", cat: "nouns", lvl: 5, d: "A pause or break in activity or continuity.", s: "The band returned after a five-year hiatus to record a new album." },
+
+  // --- I ---
+  { w: "icicle", cat: "nouns", lvl: 5, d: "A spike of ice formed when dripping water freezes.", s: "Long icicles hung from the eaves after the overnight frost." },
+  { w: "idyllic", cat: "adjectives", lvl: 5, d: "Like an idyll; peaceful, perfect, and happy.", s: "The village looked idyllic in the morning light." },
+  { w: "imbrue", cat: "literary", lvl: 5, d: "To stain or drench something, especially with blood.", s: "The battlefield had imbrued the ground red by nightfall." },
+  { w: "imperative", cat: "latin", lvl: 5, d: "Of vital importance; also a command or an essential requirement.", s: "It is imperative that everyone follows the safety procedures." },
+  { w: "incumbent", cat: "current", lvl: 5, d: "Currently holding an office or position; also a duty that falls on someone.", s: "The incumbent mayor announced she would not seek re-election." },
+  { w: "internecine", cat: "latin", lvl: 5, d: "Relating to conflict within a group that is destructive to both sides.", s: "Years of internecine rivalry had weakened the party from within." },
+
+  // --- K (Te Reo) ---
+  { w: "koropiko", cat: "tereo", lvl: 5, d: "To bow or stoop; to show respect through a physical gesture.", s: "Students were asked to koropiko as the kaumātua entered the wharenui.", phon: "kaw-raw-pee-kaw" },
+
+  // --- L ---
+  { w: "lampoon", cat: "literary", lvl: 5, d: "To publicly criticise or mock using satire.", s: "The cartoon lampooned the politician's contradictory promises." },
+  { w: "loquacious", cat: "adjectives", lvl: 5, d: "Tending to talk a great deal; talkative.", s: "Her loquacious nature made her a natural host on the radio." },
+  { w: "luscious", cat: "adjectives", lvl: 5, d: "Having a rich, pleasing flavour or smell; also very appealing to the senses.", s: "The market stall was piled high with luscious tropical fruit." },
+
+  // --- M ---
+  { w: "mākutu", cat: "tereo", lvl: 5, d: "A curse or spell used in Māori tradition to harm an enemy.", s: "The elder warned that breaking the tapu could invite mākutu.", phon: "mah-koo-too" },
+  { w: "maunga", cat: "tereo", lvl: 5, d: "A mountain.", s: "The tribe's ancestral maunga could be seen from many kilometres away.", phon: "maong-ah" },
+  { w: "mendacious", cat: "adjectives", lvl: 5, d: "Not telling the truth; lying.", s: "The report accused the official of making mendacious claims to parliament." },
+  { w: "metabolism", cat: "science", lvl: 5, d: "The chemical processes in a living organism that maintain life.", s: "Exercise raises your metabolism, helping you burn energy more efficiently." },
+  { w: "monolithic", cat: "adjectives", lvl: 5, d: "Large, powerful, and difficult to change; also relating to a single massive stone.", s: "The monolithic corporation was hard for small competitors to challenge." },
+
+  // --- N ---
+  { w: "nemesis", cat: "greek", lvl: 5, d: "A long-standing rival or source of downfall; the goddess of divine retribution.", s: "The villain finally met his nemesis at the end of the film." },
+
+  // --- O ---
+  { w: "obdurate", cat: "latin", lvl: 5, d: "Stubbornly refusing to change one's opinion or course of action.", s: "Despite all the evidence, he remained obdurate in his position." },
+  { w: "obstinate", cat: "adjectives", lvl: 5, d: "Stubbornly refusing to change one's mind despite good reasons to do so.", s: "The obstinate child refused to put on shoes no matter what." },
+  { w: "obtuse", cat: "adjectives", lvl: 5, d: "Annoyingly slow to understand; also describing an angle greater than 90°.", s: "He wasn't being stupid — he was being deliberately obtuse." },
+  { w: "ornament", cat: "nouns", lvl: 5, d: "A thing used to decorate or adorn something.", s: "She carefully wrapped each ornament before packing the box." },
+
+  // --- P ---
+  { w: "paneke", cat: "tereo", lvl: 5, d: "To slide or move forward; advance.", s: "The teacher encouraged the class to paneke through the difficult problems.", phon: "pah-neh-keh" },
+  { w: "polemic", cat: "literary", lvl: 5, d: "A strong verbal or written attack on a belief or position.", s: "His essay was a fierce polemic against the new education policy." },
+  { w: "polemical", cat: "adjectives", lvl: 5, d: "Relating to or involving strong controversy or argument.", s: "The book was praised in some quarters but condemned for its polemical tone." },
+  { w: "precision", cat: "nouns", lvl: 5, d: "The quality of being exact and accurate.", s: "The surgeon performed the procedure with extraordinary precision." },
+  { w: "predecessor", cat: "nouns", lvl: 5, d: "A person who held a job or office before the current holder.", s: "The new principal respected the work done by her predecessor." },
+  { w: "prestige", cat: "nouns", lvl: 5, d: "Widespread respect and admiration earned through achievement or quality.", s: "Winning the award brought great prestige to the small school." },
+  { w: "prevalence", cat: "nouns", lvl: 5, d: "The fact or condition of being widespread or common.", s: "The study examined the prevalence of the disease across different age groups." },
+  { w: "profanity", cat: "nouns", lvl: 5, d: "Swearing or blasphemy; disrespectful language.", s: "The referee warned the player about the use of profanity on the field." },
+
+  // --- R ---
+  { w: "ransomware", cat: "current", lvl: 5, d: "Malicious software that encrypts a victim's files and demands payment to restore access.", s: "The hospital's systems were locked by a ransomware attack for three days." },
+  { w: "raucous", cat: "adjectives", lvl: 5, d: "Making or constituting a disturbingly harsh and loud noise.", s: "A raucous crowd spilled out of the stadium after the match." },
+  { w: "relinquish", cat: "latin", lvl: 5, d: "To voluntarily give up or surrender something.", s: "She was reluctant to relinquish control of the project she had led for years." },
+  { w: "robotic", cat: "adjectives", lvl: 5, d: "Relating to robots; also used to describe movement or speech that is mechanical and stiff.", s: "The robotic arm assembled parts far faster than any human worker could." },
+
+  // --- S ---
+  { w: "sanguine", cat: "adjectives", lvl: 5, d: "Optimistic or positive, especially in a difficult situation.", s: "She remained sanguine about their chances even when others had given up." },
+  { w: "simile", cat: "literary", lvl: 5, d: "A figure of speech comparing two things using 'like' or 'as'.", s: "'As brave as a lion' is a classic simile." },
+  { w: "sporadic", cat: "adjectives", lvl: 5, d: "Occurring at irregular intervals; not continuous or steady.", s: "There were sporadic bursts of applause throughout the performance." },
+  { w: "stamina", cat: "nouns", lvl: 5, d: "The physical or mental strength to sustain prolonged effort.", s: "Long-distance running requires enormous stamina." },
+  { w: "sublimate", cat: "latin", lvl: 5, d: "To redirect energy or impulses into more acceptable activity; in chemistry, to convert directly from solid to gas.", s: "She sublimated her anger into hours of determined practice." },
+  { w: "symbiotic", cat: "adjectives", lvl: 5, d: "Involving a relationship between two organisms or people that benefits both.", s: "The symbiotic relationship between the bee and the flower helps both survive." },
+
+  // --- T ---
+  { w: "tangible", cat: "adjectives", lvl: 5, d: "Able to be touched or felt; real and not imaginary.", s: "After months of work, they finally had tangible results to show." },
+  { w: "tempestuous", cat: "adjectives", lvl: 5, d: "Very stormy; also used to describe a relationship full of strong emotions.", s: "Their tempestuous friendship lurched between warmth and fierce argument." },
+  { w: "tuatara", cat: "nouns", lvl: 5, d: "A large reptile native to New Zealand, the only surviving member of an ancient order.", s: "The tuatara is often called a living fossil due to its ancient lineage." },
+  { w: "tuawhenua", cat: "tereo", lvl: 5, d: "The hinterland; inland areas away from the coast.", s: "Many communities in the tuawhenua rely on forestry and farming.", phon: "too-ah-feh-noo-ah" },
+
+  // --- U ---
+  { w: "umbrage", cat: "nouns", lvl: 5, d: "A feeling of offence or annoyance.", s: "He took umbrage at the suggestion that he had been careless." },
+
+  // --- V ---
+  { w: "vigilance", cat: "nouns", lvl: 5, d: "The action of keeping careful watch for possible danger or difficulties.", s: "Constant vigilance was needed to protect the camp from predators." },
+  { w: "vindicate", cat: "latin", lvl: 5, d: "To clear someone of blame or suspicion; to show that something was right.", s: "The new evidence vindicated her completely." },
+  { w: "virulent", cat: "adjectives", lvl: 5, d: "Extremely severe or harmful; intensely hostile.", s: "The virulent strain spread rapidly through the population." },
+
+  // --- W (Te Reo) ---
+  { w: "waiata", cat: "tereo", lvl: 5, d: "A song; Māori traditional song.", s: "The group sang a waiata to welcome the visitors onto the marae.", phon: "wai-ah-tah" },
+  { w: "whakataukī", cat: "tereo", lvl: 5, d: "A Māori proverb or saying that encodes traditional wisdom.", s: "The teacher opened the lesson with a whakataukī about perseverance.", phon: "fah-kah-tao-kee" },
+  { w: "witticism", cat: "literary", lvl: 5, d: "A witty or cleverly amusing remark.", s: "The speech was full of well-timed witticisms that kept the audience laughing." },
+  { w: "tamariki", cat: "tereo", lvl: 5, d: "Children.", s: "The tamariki played games on the marae while the adults met inside.", phon: "tah-mah-ree-kee" },
+  { w: "tumultuous", cat: "adjectives", lvl: 5, d: "Making a loud, confused noise; excited and chaotic.", s: "The team received a tumultuous welcome when they returned home." },
+  { w: "tyrannical", cat: "adjectives", lvl: 5, d: "Exercising power in a cruel or oppressive way.", s: "The tyrannical ruler banned all political opposition." },
+  // The following 6 words appear in other sets but are included here
+  // so all 100 official regional words show when Regionals is filtered.
+  // Deck-building deduplicates by word string when multiple levels are active.
+  { w: "amphibian", cat: "greek", lvl: 5, d: "A cold-blooded animal that lives both in water and on land.", s: "Frogs are a well-known type of amphibian." },
+  { w: "protagonist", cat: "literary", lvl: 5, d: "The main character of a story.", s: "The protagonist had to choose between loyalty and ambition." },
+  { w: "ambivalent", cat: "adjectives", lvl: 5, d: "Having mixed feelings about something.", s: "He felt ambivalent about moving to a new city." },
+  { w: "tikanga", cat: "tereo", lvl: 5, d: "Customary practices and correct procedures.", s: "They followed tikanga carefully when entering the wharenui.", phon: "tee-kahng-ah" },
+  { w: "imbroglio", cat: "nouns", lvl: 5, d: "An extremely confused or complicated situation.", s: "The contract dispute turned into a legal imbroglio." },
+  { w: "silhouette", cat: "nouns", lvl: 5, d: "The dark outline of a person or object against a lighter background.", s: "Her silhouette was visible against the sunset." },
+];
+
+if (typeof module !== "undefined") module.exports = { CATEGORIES, WORDS, WORDS_SET_A, WORDS_SET_B, WORDS_REGIONAL };
 
 </script>
 <script>
   // ---------- VERSION ----------
-  const APP_VERSION = "1.6.0";
+  const APP_VERSION = "1.7.1";
 
   // ---------- STATE ----------
   let activeCategory = "all";
@@ -1113,6 +1269,7 @@ if (typeof module !== "undefined") module.exports = { CATEGORIES, WORDS, WORDS_S
     lvl2: document.getElementById('lvl2'),
     lvl3: document.getElementById('lvl3'),
     lvl4: document.getElementById('lvl4'),
+    lvl5: document.getElementById('lvl5'),
   };
 
   function catInfo(key){
@@ -1133,13 +1290,25 @@ if (typeof module !== "undefined") module.exports = { CATEGORIES, WORDS, WORDS_S
     const showLvl2 = els.lvl2.checked;
     const showLvl3 = els.lvl3.checked;
     const showLvl4 = els.lvl4.checked;
-    const allWords = [...WORDS, ...WORDS_SET_A, ...WORDS_SET_B];
+    const showLvl5 = els.lvl5.checked;
+    const allWords = [...WORDS, ...WORDS_SET_A, ...WORDS_SET_B, ...WORDS_REGIONAL];
     let pool = allWords.filter(w => {
       if (w.lvl === 1 && !showLvl1) return false;
       if (w.lvl === 2 && !showLvl2) return false;
       if (w.lvl === 3 && !showLvl3) return false;
       if (w.lvl === 4 && !showLvl4) return false;
+      if (w.lvl === 5 && !showLvl5) return false;
       if (activeCategory !== "all" && w.cat !== activeCategory) return false;
+      return true;
+    });
+    // Deduplicate by word string — some words appear in multiple sets
+    // (e.g. regional list includes words that also exist in lvl 1/2/3/4)
+    // so when multiple levels are active, only one instance plays per session.
+    const seen = new Set();
+    pool = pool.filter(w => {
+      const key = w.w.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
       return true;
     });
     // shuffle
@@ -1157,15 +1326,26 @@ if (typeof module !== "undefined") module.exports = { CATEGORIES, WORDS, WORDS_S
 
   // ---------- CATEGORY SHELF ----------
   function renderShelf(){
-    const allWords = [...WORDS, ...WORDS_SET_A, ...WORDS_SET_B];
+    const allWords = [...WORDS, ...WORDS_SET_A, ...WORDS_SET_B, ...WORDS_REGIONAL];
     const levelMatches = (w) =>
       (els.lvl1.checked && w.lvl===1) ||
       (els.lvl2.checked && w.lvl===2) ||
       (els.lvl3.checked && w.lvl===3) ||
-      (els.lvl4.checked && w.lvl===4);
-    const counts = { all: allWords.filter(levelMatches).length };
+      (els.lvl4.checked && w.lvl===4) ||
+      (els.lvl5.checked && w.lvl===5);
+
+    // Deduplicate before counting so shelf numbers match actual deck sizes
+    const seenAll = new Set();
+    const deduped = allWords.filter(w => {
+      const key = w.w.toLowerCase();
+      if (seenAll.has(key)) return false;
+      seenAll.add(key);
+      return true;
+    });
+
+    const counts = { all: deduped.filter(levelMatches).length };
     CATEGORIES.forEach(c => {
-      counts[c.key] = allWords.filter(w => w.cat === c.key && levelMatches(w)).length;
+      counts[c.key] = deduped.filter(w => w.cat === c.key && levelMatches(w)).length;
     });
 
     let html = `<button class="cat-pill ${activeCategory==='all'?'active':''}" data-cat="all">All words <span class="count">${counts.all}</span></button>`;
@@ -1578,6 +1758,7 @@ if (typeof module !== "undefined") module.exports = { CATEGORIES, WORDS, WORDS_S
   els.lvl2.addEventListener('change', () => { renderShelf(); buildDeck(); });
   els.lvl3.addEventListener('change', () => { renderShelf(); buildDeck(); });
   els.lvl4.addEventListener('change', () => { renderShelf(); buildDeck(); });
+  els.lvl5.addEventListener('change', () => { renderShelf(); buildDeck(); });
 
   // ---------- INIT ----------
   document.getElementById('versionBadge').textContent = 'v' + APP_VERSION;
