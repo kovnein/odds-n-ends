@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ambient Photos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --ink: #EDE6D6;
+    --ink-dim: #B9AF9B;
+    --charcoal: #14120F;
+    --charcoal-2: #1B1814;
+    --amber: #C89B3C;
+    --amber-dim: #7A6528;
+    --line: rgba(237,230,214,0.12);
+    --radius: 14px;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:#000; color:var(--ink); font-family:var(--sans);
+    overflow:hidden;
+  }
+  button{font-family:var(--sans);}
+
+  /* ---------- Setup screen ---------- */
+  #setup{
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(200,155,60,0.10), transparent 60%),
+      var(--charcoal);
+    display:flex; align-items:center; justify-content:center;
+    padding:32px; overflow-y:auto;
+  }
+  .panel{
+    width:100%; max-width:480px;
+    background:var(--charcoal-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:40px 36px 32px;
+    position:relative;
+  }
+  .aperture{
+    width:56px; height:56px; margin:0 auto 20px;
+    display:block;
+  }
+  .aperture path{
+    transform-origin:center;
+    transition: transform 900ms cubic-bezier(.2,.8,.2,1), opacity 900ms;
+  }
+  .panel h1{
+    font-family:var(--serif); font-weight:500; font-size:26px;
+    text-align:center; margin:0 0 6px; letter-spacing:0.2px;
+  }
+  .panel .sub{
+    text-align:center; color:var(--ink-dim); font-size:14px;
+    margin:0 0 32px; line-height:1.5;
+  }
+  .steps{
+    display:flex; flex-direction:column; gap:0;
+    margin-bottom:28px;
+  }
+  .step{
+    display:flex; gap:16px; padding:16px 0;
+    border-top:1px solid var(--line);
+  }
+  .step:first-child{border-top:none;}
+  .step-num{
+    font-family:var(--serif); font-size:14px; color:var(--amber);
+    width:20px; flex:none; padding-top:2px;
+  }
+  .step-body{flex:1; min-width:0;}
+  .step-title{font-size:14.5px; font-weight:600; margin-bottom:3px;}
+  .step-desc{font-size:13px; color:var(--ink-dim); line-height:1.5;}
+  .step-desc a{color:var(--amber); text-decoration:none; border-bottom:1px solid var(--amber-dim);}
+  .step.done .step-num{color:#7DBE8C;}
+  .step.done .step-title::after{content:" — done"; font-weight:400; color:#7DBE8C; font-size:12px;}
+
+  input[type=text]{
+    width:100%; background:#0F0D0A; border:1px solid var(--line);
+    border-radius:8px; padding:10px 12px; color:var(--ink);
+    font-size:13.5px; margin-top:10px; outline:none;
+  }
+  input[type=text]:focus{border-color:var(--amber-dim);}
+
+  .btn{
+    width:100%; padding:12px 16px; border-radius:8px; border:1px solid var(--amber-dim);
+    background:transparent; color:var(--amber); font-size:14px; font-weight:600;
+    cursor:pointer; transition:background 150ms, color 150ms; margin-top:10px;
+  }
+  .btn:hover{background:rgba(200,155,60,0.10);}
+  .btn.primary{background:var(--amber); color:#14120F; border-color:var(--amber);}
+  .btn.primary:hover{background:#DBAE4F;}
+  .btn:disabled{opacity:0.35; cursor:not-allowed;}
+
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px;}
+  .row label{font-size:13px; color:var(--ink-dim);}
+  .row input[type=range]{width:130px; accent-color:var(--amber);}
+  .row .val{font-size:12.5px; color:var(--ink); width:38px; text-align:right;}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; margin-top:12px;}
+  .toggle-row label{font-size:13px; color:var(--ink-dim);}
+  .switch{position:relative; width:38px; height:22px; flex:none;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider-pill{position:absolute; inset:0; background:#39352C; border-radius:999px; cursor:pointer; transition:background 150ms;}
+  .slider-pill::before{content:""; position:absolute; width:16px; height:16px; left:3px; top:3px; background:var(--ink); border-radius:50%; transition:transform 150ms;}
+  .switch input:checked + .slider-pill{background:var(--amber-dim);}
+  .switch input:checked + .slider-pill::before{transform:translateX(16px); background:var(--amber);}
+
+  .status{font-size:12.5px; color:var(--ink-dim); text-align:center; margin-top:18px; min-height:16px;}
+  .status.error{color:#D97757;}
+  .count-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:#7DBE8C;
+    margin-top:6px;
+  }
+
+  /* ---------- Slideshow screen ---------- */
+  #stage{
+    position:fixed; inset:0; background:#000; display:none;
+  }
+  .layer{
+    position:absolute; inset:0; opacity:0;
+    transition:opacity 1400ms ease;
+  }
+  .layer.active{opacity:1;}
+  .layer .bg{
+    position:absolute; inset:-4%; background-size:cover; background-position:center;
+    filter:blur(38px) brightness(0.55) saturate(1.15);
+    transform:scale(1.1);
+  }
+  .layer .fg{
+    position:absolute; inset:0; background-size:contain; background-position:center; background-repeat:no-repeat;
+    transform:scale(1);
+  }
+  .layer.kenburns .fg{ transition: transform linear; }
+  .layer.kenburns .bg{ transition: transform linear; }
+
+  #clock{
+    position:absolute; left:36px; bottom:30px;
+    font-family:var(--serif); font-weight:400; font-size:15px;
+    color:rgba(237,230,214,0.72);
+    text-shadow:0 1px 6px rgba(0,0,0,0.6);
+    letter-spacing:0.3px;
+    pointer-events:none;
+  }
+  #caption{
+    position:absolute; right:36px; bottom:30px;
+    font-size:12px; color:rgba(237,230,214,0.5);
+    text-shadow:0 1px 6px rgba(0,0,0,0.6);
+    pointer-events:none; max-width:40%; text-align:right;
+  }
+  #exit-hint{
+    position:absolute; top:22px; right:26px;
+    font-size:11.5px; color:rgba(237,230,214,0);
+    transition:color 400ms; pointer-events:none;
+    letter-spacing:0.3px;
+  }
+  #stage.show-controls #exit-hint{ color:rgba(237,230,214,0.55); }
+  #stage.show-controls #gear{ opacity:1; pointer-events:auto; }
+  #gear{
+    position:absolute; top:20px; right:20px; width:34px; height:34px;
+    border-radius:50%; border:1px solid rgba(237,230,214,0.25); background:rgba(0,0,0,0.35);
+    color:var(--ink); font-size:15px; display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 400ms; cursor:pointer;
+  }
+  #loading-msg{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--ink-dim); font-size:13px; font-family:var(--sans);
+  }
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <div class="panel">
+    <svg class="aperture" viewBox="0 0 100 100" fill="none" id="apertureSvg">
+      <g id="apertureBlades" stroke="var(--amber)" stroke-width="2.5" stroke-linejoin="round" fill="rgba(200,155,60,0.08)">
+        <path d="M50 8 L74 20 L68 46 Z"></path>
+        <path d="M50 8 L74 20 L68 46 Z" transform="rotate(60 50 50)"></path>
+        <path d="M50 8 L74 20 L68 46 Z" transform="rotate(120 50 50)"></path>
+        <path d="M50 8 L74 20 L68 46 Z" transform="rotate(180 50 50)"></path>
+        <path d="M50 8 L74 20 L68 46 Z" transform="rotate(240 50 50)"></path>
+        <path d="M50 8 L74 20 L68 46 Z" transform="rotate(300 50 50)"></path>
+      </g>
+    </svg>
+    <h1>Ambient Photos</h1>
+    <p class="sub">Turns a private Google Photos album into a slow, randomized full‑screen slideshow — the same idea as Google TV's ambient mode, running in this browser tab.</p>
+
+    <div class="steps">
+      <div class="step" id="step1">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">Connect your Google account</div>
+          <div class="step-desc">
+            Needs an OAuth Client ID from your own Google Cloud project (Google requires this per app — see the included SETUP guide for the five‑minute walkthrough).
+          </div>
+          <input type="text" id="clientId" placeholder="Your OAuth Client ID (ends in .apps.googleusercontent.com)">
+          <button class="btn primary" id="connectBtn">Connect Google account</button>
+        </div>
+      </div>
+
+      <div class="step" id="step2">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">Choose an album</div>
+          <div class="step-desc">Opens Google Photos in a new tab. Pick an album — or select photos individually — then return here.</div>
+          <button class="btn" id="pickBtn" disabled>Choose photos</button>
+          <div class="count-pill" id="countPill" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="step" id="step3">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">Start the slideshow</div>
+          <div class="row">
+            <label>Interval</label>
+            <input type="range" id="interval" min="5" max="60" value="15">
+            <div class="val" id="intervalVal">15s</div>
+          </div>
+          <div class="toggle-row">
+            <label>Slow zoom motion</label>
+            <label class="switch"><input type="checkbox" id="kenburns" checked><span class="slider-pill"></span></label>
+          </div>
+          <div class="toggle-row">
+            <label>Show clock</label>
+            <label class="switch"><input type="checkbox" id="showClock" checked><span class="slider-pill"></span></label>
+          </div>
+          <div class="toggle-row">
+            <label>Shuffle order</label>
+            <label class="switch"><input type="checkbox" id="shuffle" checked><span class="slider-pill"></span></label>
+          </div>
+          <button class="btn primary" id="startBtn" disabled>Start slideshow</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="status" id="statusMsg"></div>
+  </div>
+</div>
+
+<div id="stage">
+  <div id="loading-msg">Loading photos…</div>
+  <div class="layer" id="layerA"><div class="bg"></div><div class="fg"></div></div>
+  <div class="layer" id="layerB"><div class="bg"></div><div class="fg"></div></div>
+  <div id="clock"></div>
+  <div id="caption"></div>
+  <div id="exit-hint">Move mouse and press Esc for settings</div>
+  <div id="gear" title="Back to settings">⚙</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SCOPE = "https://www.googleapis.com/auth/photospicker.mediaitems.readonly";
+  const LS_KEY = "ambientPhotosConfig";
+
+  const els = {
+    clientId: document.getElementById('clientId'),
+    connectBtn: document.getElementById('connectBtn'),
+    pickBtn: document.getElementById('pickBtn'),
+    startBtn: document.getElementById('startBtn'),
+    countPill: document.getElementById('countPill'),
+    statusMsg: document.getElementById('statusMsg'),
+    interval: document.getElementById('interval'),
+    intervalVal: document.getElementById('intervalVal'),
+    kenburns: document.getElementById('kenburns'),
+    showClock: document.getElementById('showClock'),
+    shuffle: document.getElementById('shuffle'),
+    step1: document.getElementById('step1'),
+    step2: document.getElementById('step2'),
+    step3: document.getElementById('step3'),
+    setup: document.getElementById('setup'),
+    stage: document.getElementById('stage'),
+    loadingMsg: document.getElementById('loading-msg'),
+    layerA: document.getElementById('layerA'),
+    layerB: document.getElementById('layerB'),
+    clock: document.getElementById('clock'),
+    caption: document.getElementById('caption'),
+    gear: document.getElementById('gear'),
+    apertureBlades: document.getElementById('apertureBlades'),
+  };
+
+  let tokenClient = null;
+  let accessToken = null;
+  let tokenExpiresAt = 0;
+  let sessionId = null;
+  let mediaItems = [];      // [{id, baseUrl, width, height}]
+  let queue = [];           // shuffled/sequential playback order (indices)
+  let queuePos = 0;
+  let activeLayer = null;
+  let slideTimer = null;
+  let clockTimer = null;
+  let refreshTimer = null;
+  let currentObjectUrls = [];
+
+  function setStatus(msg, isError){
+    els.statusMsg.textContent = msg || "";
+    els.statusMsg.className = "status" + (isError ? " error" : "");
+  }
+
+  function saveConfig(){
+    try{
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        clientId: els.clientId.value.trim(),
+        interval: els.interval.value,
+        kenburns: els.kenburns.checked,
+        showClock: els.showClock.checked,
+        shuffle: els.shuffle.checked,
+      }));
+    }catch(e){}
+  }
+
+  function loadConfig(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return;
+      const c = JSON.parse(raw);
+      if(c.clientId) els.clientId.value = c.clientId;
+      if(c.interval) { els.interval.value = c.interval; els.intervalVal.textContent = c.interval + "s"; }
+      if(typeof c.kenburns === 'boolean') els.kenburns.checked = c.kenburns;
+      if(typeof c.showClock === 'boolean') els.showClock.checked = c.showClock;
+      if(typeof c.shuffle === 'boolean') els.shuffle.checked = c.shuffle;
+    }catch(e){}
+  }
+
+  els.interval.addEventListener('input', ()=>{
+    els.intervalVal.textContent = els.interval.value + "s";
+    saveConfig();
+  });
+  [els.kenburns, els.showClock, els.shuffle].forEach(el=>el.addEventListener('change', saveConfig));
+  els.clientId.addEventListener('change', saveConfig);
+
+  // ---------- Step 1: OAuth ----------
+  function apertureOpen(open){
+    if(!els.apertureBlades) return;
+    els.apertureBlades.querySelectorAll('path').forEach((p, i)=>{
+      p.style.transform = (open ? 'scale(0.45)' : 'scale(1)');
+    });
+  }
+
+  function waitForGis(cb){
+    if(window.google && google.accounts && google.accounts.oauth2) return cb();
+    setTimeout(()=>waitForGis(cb), 150);
+  }
+
+  els.connectBtn.addEventListener('click', ()=>{
+    const clientId = els.clientId.value.trim();
+    if(!clientId){
+      setStatus("Paste your OAuth Client ID first — see SETUP guide.", true);
+      return;
+    }
+    saveConfig();
+    setStatus("Loading Google sign-in…");
+    els.connectBtn.disabled = true;
+    waitForGis(()=>{
+      try{
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: SCOPE,
+          callback: (resp)=>{
+            els.connectBtn.disabled = false;
+            if(resp.error){
+              setStatus("Google sign-in failed: " + resp.error, true);
+              return;
+            }
+            accessToken = resp.access_token;
+            tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+            apertureOpen(true);
+            els.step1.classList.add('done');
+            els.pickBtn.disabled = false;
+            setStatus("Connected. Now choose an album.");
+            scheduleTokenRefresh();
+          }
+        });
+        tokenClient.requestAccessToken({prompt: 'consent'});
+      }catch(e){
+        els.connectBtn.disabled = false;
+        setStatus("Couldn't start Google sign-in — check the Client ID. " + e.message, true);
+      }
+    });
+  });
+
+  function scheduleTokenRefresh(){
+    if(refreshTimer) clearTimeout(refreshTimer);
+    const msUntilRefresh = Math.max(tokenExpiresAt - Date.now() - 5*60*1000, 10*1000);
+    refreshTimer = setTimeout(()=>{
+      if(!tokenClient) return;
+      tokenClient.requestAccessToken({prompt: ''});
+    }, msUntilRefresh);
+  }
+
+  function authHeader(){
+    return { "Authorization": "Bearer " + accessToken };
+  }
+
+  // ---------- Step 2: Picker ----------
+  els.pickBtn.addEventListener('click', async ()=>{
+    els.pickBtn.disabled = true;
+    setStatus("Opening Google Photos…");
+    try{
+      const res = await fetch("https://photospicker.googleapis.com/v1/sessions", {
+        method: "POST",
+        headers: Object.assign({"Content-Type":"application/json"}, authHeader()),
+        body: "{}"
+      });
+      if(!res.ok) throw new Error("session create failed (" + res.status + ")");
+      const session = await res.json();
+      sessionId = session.id;
+      const pickerWin = window.open(session.pickerUri, "_blank");
+      setStatus("Pick an album or photos in the new tab, then come back here.");
+      pollSession(session);
+    }catch(e){
+      setStatus("Couldn't open the photo picker: " + e.message, true);
+      els.pickBtn.disabled = false;
+    }
+  });
+
+  async function pollSession(session){
+    const intervalMs = 3000;
+    const deadline = Date.now() + 10*60*1000; // give up after 10 minutes
+    (async function poll(){
+      if(Date.now() > deadline){
+        setStatus("Picker timed out. Click \"Choose photos\" to try again.", true);
+        els.pickBtn.disabled = false;
+        return;
+      }
+      try{
+        const res = await fetch("https://photospicker.googleapis.com/v1/sessions/" + session.id, {
+          headers: authHeader()
+        });
+        if(!res.ok) throw new Error("poll failed (" + res.status + ")");
+        const s = await res.json();
+        if(s.mediaItemsSet){
+          await loadMediaItems(session.id);
+          return;
+        }
+        setTimeout(poll, intervalMs);
+      }catch(e){
+        setStatus("Lost contact with the picker: " + e.message, true);
+        els.pickBtn.disabled = false;
+      }
+    })();
+  }
+
+  async function loadMediaItems(sid){
+    setStatus("Loading your selection…");
+    let items = [];
+    let pageToken = "";
+    try{
+      do{
+        const url = "https://photospicker.googleapis.com/v1/mediaItems?sessionId=" + encodeURIComponent(sid)
+          + "&pageSize=100" + (pageToken ? "&pageToken=" + encodeURIComponent(pageToken) : "");
+        const res = await fetch(url, { headers: authHeader() });
+        if(!res.ok) throw new Error("list failed (" + res.status + ")");
+        const data = await res.json();
+        (data.mediaItems || []).forEach(it=>{
+          if(it.type === "PHOTO" && it.mediaFile && it.mediaFile.baseUrl){
+            items.push({
+              id: it.id,
+              baseUrl: it.mediaFile.baseUrl,
+              filename: it.mediaFile.filename || "",
+            });
+          }
+        });
+        pageToken = data.nextPageToken || "";
+      } while(pageToken);
+
+      if(items.length === 0){
+        setStatus("No photos found in that selection — videos are skipped for now. Try again.", true);
+        els.pickBtn.disabled = false;
+        return;
+      }
+
+      mediaItems = items;
+      sessionId = sid;
+      els.step2.classList.add('done');
+      els.countPill.style.display = "inline-flex";
+      els.countPill.textContent = "● " + items.length + " photo" + (items.length===1?"":"s") + " ready";
+      els.pickBtn.disabled = false;
+      els.pickBtn.textContent = "Choose different photos";
+      els.startBtn.disabled = false;
+      setStatus("Ready. Start the slideshow whenever you like.");
+    }catch(e){
+      setStatus("Couldn't load the selected photos: " + e.message, true);
+      els.pickBtn.disabled = false;
+    }
+  }
+
+  // Refresh baseUrls periodically (they expire ~60 min after being issued)
+  async function refreshBaseUrls(){
+    if(!sessionId) return;
+    try{
+      await loadMediaItemsSilently(sessionId);
+    }catch(e){
+      console.warn("baseUrl refresh failed", e);
+    }
+  }
+
+  async function loadMediaItemsSilently(sid){
+    let items = [];
+    let pageToken = "";
+    do{
+      const url = "https://photospicker.googleapis.com/v1/mediaItems?sessionId=" + encodeURIComponent(sid)
+        + "&pageSize=100" + (pageToken ? "&pageToken=" + encodeURIComponent(pageToken) : "");
+      const res = await fetch(url, { headers: authHeader() });
+      if(!res.ok) throw new Error("refresh failed (" + res.status + ")");
+      const data = await res.json();
+      (data.mediaItems || []).forEach(it=>{
+        if(it.type === "PHOTO" && it.mediaFile && it.mediaFile.baseUrl){
+          items.push({ id: it.id, baseUrl: it.mediaFile.baseUrl, filename: it.mediaFile.filename || "" });
+        }
+      });
+      pageToken = data.nextPageToken || "";
+    } while(pageToken);
+    if(items.length){
+      mediaItems = items;
+      buildQueue(false); // keep playback going, just refresh urls without reshuffling from scratch
+    }
+  }
+
+  // ---------- Step 3: Slideshow ----------
+  function buildQueue(reset){
+    const idx = mediaItems.map((_,i)=>i);
+    if(els.shuffle.checked){
+      for(let i=idx.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [idx[i],idx[j]] = [idx[j],idx[i]];
+      }
+    }
+    queue = idx;
+    if(reset) queuePos = 0;
+    if(queuePos >= queue.length) queuePos = 0;
+  }
+
+  els.startBtn.addEventListener('click', ()=>{
+    if(mediaItems.length === 0) return;
+    saveConfig();
+    els.setup.style.display = "none";
+    els.stage.style.display = "block";
+    buildQueue(true);
+    startClock();
+    requestFullscreen();
+    advanceSlide();
+    slideTimer = setInterval(advanceSlide, parseInt(els.interval.value,10)*1000);
+    // Refresh base URLs every 45 minutes so long ambient runs don't stall
+    setInterval(refreshBaseUrls, 45*60*1000);
+  });
+
+  function requestFullscreen(){
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+    if(req) { try{ req.call(el); }catch(e){} }
+  }
+
+  function startClock(){
+    function tick(){
+      if(!els.showClock.checked){ els.clock.textContent = ""; return; }
+      const d = new Date();
+      let h = d.getHours(); const m = d.getMinutes();
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12; if(h === 0) h = 12;
+      els.clock.textContent = h + ":" + String(m).padStart(2,'0') + " " + ampm;
+    }
+    tick();
+    clockTimer = setInterval(tick, 15000);
+  }
+
+  async function fetchImageObjectUrl(baseUrl, w, h){
+    const url = baseUrl + "=w" + w + "-h" + h;
+    const res = await fetch(url, { headers: authHeader() });
+    if(!res.ok) throw new Error("image fetch failed (" + res.status + ")");
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  }
+
+  async function advanceSlide(){
+    if(queue.length === 0) return;
+    if(queuePos >= queue.length){ buildQueue(true); }
+    const item = mediaItems[queue[queuePos]];
+    queuePos++;
+
+    const w = Math.min(window.innerWidth * (window.devicePixelRatio||1), 2560) | 0;
+    const h = Math.min(window.innerHeight * (window.devicePixelRatio||1), 1600) | 0;
+
+    let objUrl;
+    try{
+      objUrl = await fetchImageObjectUrl(item.baseUrl, w, h);
+    }catch(e){
+      console.warn("Skipping photo (fetch failed):", e.message);
+      if(queue.length > 1) advanceSlide();
+      return;
+    }
+
+    const incoming = (activeLayer === els.layerA) ? els.layerB : els.layerA;
+    const outgoing = (activeLayer === els.layerA) ? els.layerA : els.layerB;
+
+    els.loadingMsg.style.display = "none";
+
+    const bg = incoming.querySelector('.bg');
+    const fg = incoming.querySelector('.fg');
+    bg.style.backgroundImage = "url(" + objUrl + ")";
+    fg.style.backgroundImage = "url(" + objUrl + ")";
+
+    incoming.classList.toggle('kenburns', els.kenburns.checked);
+    if(els.kenburns.checked){
+      const dur = (parseInt(els.interval.value,10) + 1.4) + "s";
+      bg.style.transition = "none"; fg.style.transition = "none";
+      const startScale = 1.0 + Math.random()*0.02;
+      bg.style.transform = "scale(" + (1.1) + ")";
+      fg.style.transform = "scale(" + startScale + ")";
+      // force reflow
+      void fg.offsetWidth;
+      bg.style.transition = "transform " + dur + " linear";
+      fg.style.transition = "transform " + dur + " linear";
+      const endScale = startScale + 0.06 + Math.random()*0.04;
+      requestAnimationFrame(()=>{
+        bg.style.transform = "scale(" + (1.16) + ")";
+        fg.style.transform = "scale(" + endScale + ")";
+      });
+    } else {
+      bg.style.transition = "none"; fg.style.transition = "none";
+      bg.style.transform = "scale(1.1)";
+      fg.style.transform = "scale(1)";
+    }
+
+    els.caption.textContent = item.filename || "";
+
+    incoming.classList.add('active');
+    outgoing.classList.remove('active');
+    activeLayer = incoming;
+
+    // Clean up old blob URLs after the crossfade finishes
+    currentObjectUrls.push(objUrl);
+    if(currentObjectUrls.length > 3){
+      const old = currentObjectUrls.shift();
+      setTimeout(()=>URL.revokeObjectURL(old), 2000);
+    }
+  }
+
+  // ---------- Exit / settings ----------
+  let idleTimer;
+  els.stage.addEventListener('mousemove', ()=>{
+    els.stage.classList.add('show-controls');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(()=>els.stage.classList.remove('show-controls'), 3000);
+  });
+  els.gear.addEventListener('click', backToSetup);
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && els.stage.style.display === 'block') backToSetup();
+  });
+
+  function backToSetup(){
+    if(slideTimer) clearInterval(slideTimer);
+    if(clockTimer) clearInterval(clockTimer);
+    els.stage.style.display = "none";
+    els.setup.style.display = "flex";
+    if(document.exitFullscreen) { try{ document.exitFullscreen(); }catch(e){} }
+  }
+
+  loadConfig();
+})();
+</script>
+</body>
+</html>
