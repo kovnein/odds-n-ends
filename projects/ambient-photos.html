@@ -118,6 +118,43 @@
     display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:#7DBE8C;
     margin-top:6px;
   }
+  .wakelock-note{ font-size:11.5px; color:var(--ink-dim); text-align:center; margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+  .wakelock-note.ok{color:#7DBE8C;}
+  .wakelock-note.bad{color:#D97757;}
+
+  .help-link{
+    display:block; text-align:center; font-size:12.5px; color:var(--amber);
+    text-decoration:none; border-bottom:1px solid transparent; margin:-16px 0 26px;
+    cursor:pointer; background:none; border-width:0 0 1px 0; border-style:solid; border-color:transparent;
+    width:auto; padding:0;
+  }
+  .help-link:hover{ border-color:var(--amber-dim); }
+
+  /* ---------- Setup guide overlay ---------- */
+  #helpOverlay{
+    position:fixed; inset:0; background:rgba(10,9,7,0.82); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; padding:32px; z-index:50;
+  }
+  #helpOverlay.open{ display:flex; }
+  .help-panel{
+    width:100%; max-width:600px; max-height:82vh; overflow-y:auto;
+    background:var(--charcoal-2); border:1px solid var(--line); border-radius:var(--radius);
+    padding:32px 34px; position:relative;
+  }
+  .help-panel h2{ font-family:var(--serif); font-weight:500; font-size:20px; margin:26px 0 8px; }
+  .help-panel h2:first-of-type{ margin-top:0; }
+  .help-panel p{ font-size:13.5px; color:var(--ink-dim); line-height:1.6; margin:0 0 10px; }
+  .help-panel ol,.help-panel ul{ font-size:13.5px; color:var(--ink-dim); line-height:1.7; margin:0 0 10px; padding-left:20px; }
+  .help-panel li{ margin-bottom:4px; }
+  .help-panel code{ background:#0F0D0A; border:1px solid var(--line); border-radius:4px; padding:1px 6px; font-size:12.5px; color:var(--amber); }
+  .help-panel a{ color:var(--amber); }
+  .help-panel strong{ color:var(--ink); }
+  .help-close{
+    position:absolute; top:18px; right:18px; width:30px; height:30px; border-radius:50%;
+    border:1px solid var(--line); background:transparent; color:var(--ink-dim);
+    font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .help-close:hover{ color:var(--ink); border-color:var(--amber-dim); }
 
   /* ---------- Slideshow screen ---------- */
   #stage{
@@ -160,8 +197,29 @@
     transition:color 400ms; pointer-events:none;
     letter-spacing:0.3px;
   }
+  #wakeDot{
+    position:absolute; top:24px; left:26px;
+    font-size:11.5px; color:rgba(237,230,214,0);
+    transition:color 400ms; pointer-events:none;
+    display:flex; align-items:center; gap:6px; letter-spacing:0.3px;
+  }
+  #wakeDot .dot{ width:6px; height:6px; border-radius:50%; background:#7DBE8C; flex:none; }
+  #wakeDot.off .dot{ background:#D97757; }
   #stage.show-controls #exit-hint{ color:rgba(237,230,214,0.55); }
+  #stage.show-controls #wakeDot{ color:rgba(237,230,214,0.55); }
   #stage.show-controls #gear{ opacity:1; pointer-events:auto; }
+  #controls{
+    position:absolute; bottom:28px; left:50%; transform:translateX(-50%);
+    display:flex; gap:12px;
+    opacity:0; pointer-events:none; transition:opacity 400ms;
+  }
+  #stage.show-controls #controls{ opacity:1; pointer-events:auto; }
+  .ctrl-btn{
+    width:42px; height:42px; border-radius:50%; border:1px solid rgba(237,230,214,0.25);
+    background:rgba(0,0,0,0.4); color:var(--ink); font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:background 150ms;
+  }
+  .ctrl-btn:hover{ background:rgba(0,0,0,0.6); }
   #gear{
     position:absolute; top:20px; right:20px; width:34px; height:34px;
     border-radius:50%; border:1px solid rgba(237,230,214,0.25); background:rgba(0,0,0,0.35);
@@ -190,6 +248,7 @@
     </svg>
     <h1>Ambient Photos</h1>
     <p class="sub">Turns a private Google Photos album into a slow, randomized full‑screen slideshow — the same idea as Google TV's ambient mode, running in this browser tab.</p>
+    <span class="help-link" id="helpTrigger">Need to set up a Client ID? Setup guide →</span>
 
     <div class="steps">
       <div class="step" id="step1">
@@ -241,6 +300,56 @@
     </div>
 
     <div class="status" id="statusMsg"></div>
+    <div class="wakelock-note" id="wakelockNote">Checking Wake Lock support…</div>
+  </div>
+</div>
+
+<div id="helpOverlay">
+  <div class="help-panel">
+    <button class="help-close" id="helpClose" title="Close">✕</button>
+    <h2>Getting a Client ID</h2>
+    <p>Private albums require Google's sign-in, and Google requires every app to have its own OAuth Client ID from a free Google Cloud project. This is a one-time, five-minute setup.</p>
+
+    <h2>1. Create a project</h2>
+    <ol>
+      <li>Go to <a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a> and sign in.</li>
+      <li>Click the project dropdown (top left) → <strong>New Project</strong>.</li>
+      <li>Name it anything (e.g. "Ambient Photos") → <strong>Create</strong>.</li>
+    </ol>
+
+    <h2>2. Enable the Photos Picker API</h2>
+    <ol>
+      <li>Go to <strong>APIs &amp; Services → Library</strong>.</li>
+      <li>Search for <strong>Google Photos Picker API</strong> and click <strong>Enable</strong>.</li>
+    </ol>
+
+    <h2>3. Configure the OAuth consent screen</h2>
+    <ol>
+      <li><strong>APIs &amp; Services → OAuth consent screen</strong> → choose <strong>External</strong> → <strong>Create</strong>.</li>
+      <li>Fill in an app name and your email for support/developer contact, then continue through the remaining steps.</li>
+      <li>On the <strong>Test users</strong> step, add your own Google account's email. This lets you use the app without Google reviewing it.</li>
+    </ol>
+
+    <h2>4. Create the OAuth Client ID</h2>
+    <ol>
+      <li><strong>APIs &amp; Services → Credentials → Create Credentials → OAuth client ID</strong>.</li>
+      <li>Application type: <strong>Web application</strong>.</li>
+      <li>Under <strong>Authorized JavaScript origins</strong>, add the address you'll open this page from — <code>http://localhost:8000</code> for local use, or <code>https://yourusername.github.io</code> if hosting on GitHub Pages.</li>
+      <li>Click <strong>Create</strong> and copy the Client ID (ends in <code>.apps.googleusercontent.com</code>) into the field on this page.</li>
+    </ol>
+
+    <h2>5. Run the page over http(s)</h2>
+    <p>Google's sign-in needs <code>http://</code> or <code>https://</code> — opening the file directly (<code>file://</code>) won't work.</p>
+    <ul>
+      <li><strong>Locally:</strong> <code>python3 -m http.server 8000</code> in the folder, then open <code>http://localhost:8000/ambient-photos.html</code>.</li>
+      <li><strong>GitHub Pages:</strong> push the file to a repo, enable Pages in Settings, and open the resulting <code>https://yourusername.github.io/...</code> URL. Add that origin in step 4 above.</li>
+    </ul>
+
+    <h2>First sign-in warning</h2>
+    <p>Google will show an "unverified app" warning the first time — expected for a personal project. Click <strong>Advanced → Go to Ambient Photos (unsafe)</strong> to continue. It's safe: it's your own app, and only accounts you added as test users can sign in.</p>
+
+    <h2>Finding shared albums</h2>
+    <p>The photo picker doesn't browse albums — it opens showing recent photos. Use its search box and type the shared album's name to bring up its photos, then select them.</p>
   </div>
 </div>
 
@@ -250,8 +359,14 @@
   <div class="layer" id="layerB"><div class="bg"></div><div class="fg"></div></div>
   <div id="clock"></div>
   <div id="caption"></div>
+  <div id="wakeDot"><span class="dot"></span><span id="wakeLabel">Screen awake</span></div>
   <div id="exit-hint">Move mouse and press Esc for settings</div>
   <div id="gear" title="Back to settings">⚙</div>
+  <div id="controls">
+    <button class="ctrl-btn" id="prevBtn" title="Previous photo">⏮</button>
+    <button class="ctrl-btn" id="playPauseBtn" title="Pause">⏸</button>
+    <button class="ctrl-btn" id="nextBtn" title="Next photo">⏭</button>
+  </div>
 </div>
 
 <script>
@@ -285,6 +400,15 @@
     caption: document.getElementById('caption'),
     gear: document.getElementById('gear'),
     apertureBlades: document.getElementById('apertureBlades'),
+    wakeDot: document.getElementById('wakeDot'),
+    wakeLabel: document.getElementById('wakeLabel'),
+    wakelockNote: document.getElementById('wakelockNote'),
+    helpTrigger: document.getElementById('helpTrigger'),
+    helpOverlay: document.getElementById('helpOverlay'),
+    helpClose: document.getElementById('helpClose'),
+    prevBtn: document.getElementById('prevBtn'),
+    playPauseBtn: document.getElementById('playPauseBtn'),
+    nextBtn: document.getElementById('nextBtn'),
   };
 
   let tokenClient = null;
@@ -299,6 +423,11 @@
   let clockTimer = null;
   let refreshTimer = null;
   let currentObjectUrls = [];
+  let wakeLock = null;
+  let history = [];       // [{item, objUrl}] in the order actually displayed
+  let historyPos = -1;    // index into history currently on screen
+  let isPaused = false;
+  const MAX_HISTORY = 40;
 
   function setStatus(msg, isError){
     els.statusMsg.textContent = msg || "";
@@ -525,6 +654,49 @@
     }
   }
 
+  // ---------- Wake Lock (keeps the screen from sleeping during the slideshow) ----------
+  async function requestWakeLock(){
+    if(!('wakeLock' in navigator)){
+      els.wakeDot.classList.add('off');
+      els.wakeLabel.textContent = "Wake Lock unsupported";
+      return;
+    }
+    try{
+      wakeLock = await navigator.wakeLock.request('screen');
+      els.wakeDot.classList.remove('off');
+      els.wakeLabel.textContent = "Screen awake";
+      wakeLock.addEventListener('release', ()=>{
+        els.wakeDot.classList.add('off');
+        els.wakeLabel.textContent = "Wake lock released";
+      });
+    }catch(e){
+      els.wakeDot.classList.add('off');
+      els.wakeLabel.textContent = "Wake lock failed";
+      console.warn("wake lock error:", e);
+    }
+  }
+  document.addEventListener('visibilitychange', async ()=>{
+    // Wake locks are auto-released when the tab is hidden; re-acquire when shown again.
+    if(document.visibilityState === 'visible' && els.stage.style.display === 'block'){
+      await requestWakeLock();
+    }
+  });
+  function checkWakeLockSupport(){
+    if('wakeLock' in navigator){
+      els.wakelockNote.textContent = "This browser supports Wake Lock — the screen will stay on once the slideshow starts.";
+      els.wakelockNote.classList.add('ok');
+    } else {
+      els.wakelockNote.textContent = "This browser doesn't support the Wake Lock API — the screen may still sleep. Chrome, Edge, and recent Safari all support it.";
+      els.wakelockNote.classList.add('bad');
+    }
+  }
+
+  // ---------- Setup guide overlay ----------
+  els.helpTrigger.addEventListener('click', ()=> els.helpOverlay.classList.add('open'));
+  els.helpClose.addEventListener('click', ()=> els.helpOverlay.classList.remove('open'));
+  els.helpOverlay.addEventListener('click', (e)=>{ if(e.target === els.helpOverlay) els.helpOverlay.classList.remove('open'); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && els.helpOverlay.classList.contains('open')) els.helpOverlay.classList.remove('open'); });
+
   // ---------- Step 3: Slideshow ----------
   function buildQueue(reset){
     const idx = mediaItems.map((_,i)=>i);
@@ -539,16 +711,19 @@
     if(queuePos >= queue.length) queuePos = 0;
   }
 
-  els.startBtn.addEventListener('click', ()=>{
+  els.startBtn.addEventListener('click', async ()=>{
     if(mediaItems.length === 0) return;
     saveConfig();
     els.setup.style.display = "none";
     els.stage.style.display = "block";
     buildQueue(true);
+    history = []; historyPos = -1; isPaused = false;
+    els.playPauseBtn.textContent = "⏸"; els.playPauseBtn.title = "Pause";
     startClock();
     requestFullscreen();
-    advanceSlide();
-    slideTimer = setInterval(advanceSlide, parseInt(els.interval.value,10)*1000);
+    await requestWakeLock();
+    goForward();
+    resetAutoTimer();
     // Refresh base URLs every 45 minutes so long ambient runs don't stall
     setInterval(refreshBaseUrls, 45*60*1000);
   });
@@ -580,7 +755,63 @@
     return URL.createObjectURL(blob);
   }
 
-  async function advanceSlide(){
+  function trimHistory(){
+    while(history.length > MAX_HISTORY){
+      const removed = history.shift();
+      historyPos--;
+      // Don't revoke if this is somehow still the one on screen
+      if(!activeLayer || activeLayer.dataset.objUrl !== removed.objUrl){
+        URL.revokeObjectURL(removed.objUrl);
+      }
+    }
+  }
+
+  function renderSlide(entry){
+    const item = entry.item, objUrl = entry.objUrl;
+    const incoming = (activeLayer === els.layerA) ? els.layerB : els.layerA;
+    const outgoing = (activeLayer === els.layerA) ? els.layerA : els.layerB;
+
+    document.getElementById('loading-msg').style.display = "none";
+
+    const bg = incoming.querySelector('.bg');
+    const fg = incoming.querySelector('.fg');
+    bg.style.backgroundImage = "url(" + objUrl + ")";
+    fg.style.backgroundImage = "url(" + objUrl + ")";
+    incoming.dataset.objUrl = objUrl;
+
+    incoming.classList.toggle('kenburns', els.kenburns.checked);
+    if(els.kenburns.checked){
+      const dur = (parseInt(els.interval.value,10) + 1.4) + "s";
+      bg.style.transition = "none"; fg.style.transition = "none";
+      const startScale = 1.0 + Math.random()*0.02;
+      bg.style.transform = "scale(1.1)";
+      fg.style.transform = "scale(" + startScale + ")";
+      void fg.offsetWidth;
+      bg.style.transition = "transform " + dur + " linear";
+      fg.style.transition = "transform " + dur + " linear";
+      const endScale = startScale + 0.06 + Math.random()*0.04;
+      requestAnimationFrame(()=>{
+        bg.style.transform = "scale(1.16)";
+        fg.style.transform = "scale(" + endScale + ")";
+      });
+    } else {
+      bg.style.transition = "none"; fg.style.transition = "none";
+      bg.style.transform = "scale(1.1)";
+      fg.style.transform = "scale(1)";
+    }
+
+    els.caption.textContent = item.filename || "";
+    incoming.classList.add('active');
+    outgoing.classList.remove('active');
+    activeLayer = incoming;
+  }
+
+  async function goForward(){
+    if(historyPos < history.length - 1){
+      historyPos++;
+      renderSlide(history[historyPos]);
+      return;
+    }
     if(queue.length === 0) return;
     if(queuePos >= queue.length){ buildQueue(true); }
     const item = mediaItems[queue[queuePos]];
@@ -594,55 +825,48 @@
       objUrl = await fetchImageObjectUrl(item.baseUrl, w, h);
     }catch(e){
       console.warn("Skipping photo (fetch failed):", e.message);
-      if(queue.length > 1) advanceSlide();
+      if(queue.length > 1) return goForward();
       return;
     }
 
-    const incoming = (activeLayer === els.layerA) ? els.layerB : els.layerA;
-    const outgoing = (activeLayer === els.layerA) ? els.layerA : els.layerB;
-
-    els.loadingMsg.style.display = "none";
-
-    const bg = incoming.querySelector('.bg');
-    const fg = incoming.querySelector('.fg');
-    bg.style.backgroundImage = "url(" + objUrl + ")";
-    fg.style.backgroundImage = "url(" + objUrl + ")";
-
-    incoming.classList.toggle('kenburns', els.kenburns.checked);
-    if(els.kenburns.checked){
-      const dur = (parseInt(els.interval.value,10) + 1.4) + "s";
-      bg.style.transition = "none"; fg.style.transition = "none";
-      const startScale = 1.0 + Math.random()*0.02;
-      bg.style.transform = "scale(" + (1.1) + ")";
-      fg.style.transform = "scale(" + startScale + ")";
-      // force reflow
-      void fg.offsetWidth;
-      bg.style.transition = "transform " + dur + " linear";
-      fg.style.transition = "transform " + dur + " linear";
-      const endScale = startScale + 0.06 + Math.random()*0.04;
-      requestAnimationFrame(()=>{
-        bg.style.transform = "scale(" + (1.16) + ")";
-        fg.style.transform = "scale(" + endScale + ")";
-      });
-    } else {
-      bg.style.transition = "none"; fg.style.transition = "none";
-      bg.style.transform = "scale(1.1)";
-      fg.style.transform = "scale(1)";
-    }
-
-    els.caption.textContent = item.filename || "";
-
-    incoming.classList.add('active');
-    outgoing.classList.remove('active');
-    activeLayer = incoming;
-
-    // Clean up old blob URLs after the crossfade finishes
-    currentObjectUrls.push(objUrl);
-    if(currentObjectUrls.length > 3){
-      const old = currentObjectUrls.shift();
-      setTimeout(()=>URL.revokeObjectURL(old), 2000);
-    }
+    history.push({ item, objUrl });
+    trimHistory();
+    historyPos = history.length - 1;
+    renderSlide(history[historyPos]);
   }
+
+  function goBack(){
+    if(historyPos <= 0) return;
+    historyPos--;
+    renderSlide(history[historyPos]);
+  }
+
+  function resetAutoTimer(){
+    if(slideTimer) clearInterval(slideTimer);
+    if(isPaused) return;
+    slideTimer = setInterval(()=>{ goForward(); }, parseInt(els.interval.value,10)*1000);
+  }
+
+  els.playPauseBtn.addEventListener('click', ()=>{
+    isPaused = !isPaused;
+    if(isPaused){
+      if(slideTimer) clearInterval(slideTimer);
+      els.playPauseBtn.textContent = "▶";
+      els.playPauseBtn.title = "Play";
+    } else {
+      els.playPauseBtn.textContent = "⏸";
+      els.playPauseBtn.title = "Pause";
+      resetAutoTimer();
+    }
+  });
+  els.nextBtn.addEventListener('click', ()=>{
+    goForward();
+    resetAutoTimer();
+  });
+  els.prevBtn.addEventListener('click', ()=>{
+    goBack();
+    resetAutoTimer();
+  });
 
   // ---------- Exit / settings ----------
   let idleTimer;
@@ -659,12 +883,17 @@
   function backToSetup(){
     if(slideTimer) clearInterval(slideTimer);
     if(clockTimer) clearInterval(clockTimer);
+    if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock = null; }
+    history.forEach(h=>URL.revokeObjectURL(h.objUrl));
+    history = []; historyPos = -1; isPaused = false;
+    els.playPauseBtn.textContent = "⏸"; els.playPauseBtn.title = "Pause";
     els.stage.style.display = "none";
     els.setup.style.display = "flex";
     if(document.exitFullscreen) { try{ document.exitFullscreen(); }catch(e){} }
   }
 
   loadConfig();
+  checkWakeLockSupport();
 })();
 </script>
 </body>
