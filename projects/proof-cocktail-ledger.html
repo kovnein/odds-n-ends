@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Proof — A Cocktail Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161209;
+  --bg-2:#1c170f;
+  --surface:#221b12;
+  --surface-2:#2b2317;
+  --border:#3c3020;
+  --border-soft:#2f2618;
+  --text:#f1e7d4;
+  --text-dim:#c9bba0;
+  --text-mute:#8f7f66;
+  --brass:#c9a24b;
+  --brass-bright:#e2bc63;
+  --brass-dim:#8a6f34;
+  --ruby:#93303f;
+  --ruby-bright:#b8465a;
+  --teal:#4c7a6e;
+  --green:#6e8a49;
+  --gold-lt:#d9b979;
+  --rust:#a6613a;
+  --danger:#c0483e;
+  --radius:10px;
+  --radius-lg:16px;
+  --shadow:0 10px 30px -12px rgba(0,0,0,0.6);
+  font-size:16px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(201,162,75,0.07), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(147,48,63,0.06), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  min-height:100vh;
+  padding-bottom:60px;
+}
+::selection{background:var(--brass-dim);color:var(--text);}
+button{font-family:inherit;}
+input,select,textarea{font-family:inherit;}
+
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.68rem;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--text-mute);
+}
+
+/* ---------- Header ---------- */
+header.top{
+  padding:22px 18px 14px;
+  max-width:1100px;
+  margin:0 auto;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  border-bottom:1px solid var(--border-soft);
+}
+.brand h1{
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-weight:600;
+  font-size:2.1rem;
+  margin:0;
+  letter-spacing:0.01em;
+  color:var(--brass-bright);
+  line-height:1;
+}
+.brand .sub{
+  margin-top:4px;
+}
+.header-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.icon-btn{
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text-dim);
+  width:44px;height:44px;
+  border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;
+  cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.icon-btn:hover,.icon-btn:active{background:var(--surface-2);border-color:var(--brass-dim);color:var(--brass-bright);}
+.btn{
+  background:var(--brass);
+  color:#1a1509;
+  border:none;
+  font-weight:700;
+  padding:11px 18px;
+  border-radius:var(--radius);
+  cursor:pointer;
+  font-size:0.92rem;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:background .15s,transform .1s;
+  min-height:44px;
+}
+.btn:active{transform:scale(0.97);}
+.btn:hover{background:var(--brass-bright);}
+.btn.ghost{
+  background:transparent;
+  color:var(--text-dim);
+  border:1px solid var(--border);
+}
+.btn.ghost:hover{border-color:var(--brass-dim);color:var(--brass-bright);}
+.btn.danger{background:var(--danger);color:#1a0d0a;}
+.btn.danger:hover{background:#d65c50;}
+.btn.small{padding:8px 12px;font-size:0.82rem;min-height:38px;}
+
+/* ---------- Filter bar ---------- */
+.filter-wrap{
+  max-width:1100px;
+  margin:16px auto 0;
+  padding:0 18px;
+}
+.search-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.search-box{
+  flex:1;
+  position:relative;
+}
+.search-box input{
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  color:var(--text);
+  padding:12px 14px 12px 38px;
+  font-size:0.95rem;
+  min-height:44px;
+}
+.search-box input:focus{outline:none;border-color:var(--brass-dim);}
+.search-box .ic{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  color:var(--text-mute);pointer-events:none;
+}
+.view-toggle{
+  display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;
+}
+.view-toggle button{
+  background:transparent;border:none;color:var(--text-mute);padding:0 14px;min-height:44px;cursor:pointer;font-size:1rem;
+}
+.view-toggle button.active{background:var(--brass);color:#1a1509;}
+
+.filters-toggle{
+  margin-top:10px;
+  display:flex;align-items:center;gap:10px;
+  flex-wrap:wrap;
+}
+.chip{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.76rem;
+  letter-spacing:0.03em;
+  padding:8px 13px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text-dim);
+  cursor:pointer;
+  user-select:none;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all .12s;
+  min-height:38px;
+}
+.chip:hover{border-color:var(--brass-dim);}
+.chip.include{background:var(--brass);border-color:var(--brass);color:#1a1509;font-weight:600;}
+.chip.exclude{background:var(--ruby);border-color:var(--ruby);color:#fbe4e8;font-weight:600;text-decoration:line-through;text-decoration-thickness:1.5px;}
+.chip.method-active{background:var(--surface-2);border-color:var(--brass-bright);color:var(--brass-bright);}
+
+.filters-panel{
+  margin-top:12px;
+  padding:14px;
+  background:var(--surface);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius-lg);
+  display:none;
+  flex-direction:column;
+  gap:14px;
+}
+.filters-panel.open{display:flex;}
+.filter-group label.eyebrow{display:block;margin-bottom:8px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;}
+.filter-row-inline{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;}
+.field{display:flex;flex-direction:column;gap:6px;min-width:150px;}
+.field select, .field input{
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:9px 10px;font-size:0.88rem;min-height:40px;
+}
+.stars-mini{display:flex;gap:2px;}
+.clear-filters{margin-left:auto;}
+
+.result-count{
+  margin-top:12px;
+  color:var(--text-mute);
+  font-size:0.82rem;
+  font-family:'IBM Plex Mono',monospace;
+}
+
+/* ---------- Star ratings ---------- */
+.star-row{display:inline-flex;gap:2px;}
+.star-btn{
+  background:none;border:none;cursor:pointer;padding:4px;
+  font-size:1.05rem;line-height:1;color:var(--border);
+  min-width:28px;min-height:28px;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .1s,transform .1s;
+}
+.star-btn.filled{color:var(--brass-bright);}
+.star-btn:active{transform:scale(1.25);}
+.rating-block{display:flex;flex-direction:column;gap:2px;}
+.rating-block .who{font-size:0.68rem;color:var(--text-mute);font-family:'IBM Plex Mono',monospace;letter-spacing:0.05em;text-transform:uppercase;}
+
+/* ---------- Method badge ---------- */
+.method-badge{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.68rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--brass-bright);
+  border:1px solid var(--brass-dim);
+  padding:4px 9px;
+  border-radius:5px;
+  display:inline-block;
+  white-space:nowrap;
+}
+
+/* ---------- Pour bar (signature element) ---------- */
+.pour-bar{
+  display:flex;
+  height:14px;
+  border-radius:4px;
+  overflow:hidden;
+  border:1px solid var(--border-soft);
+  background:var(--bg-2);
+}
+.pour-seg{height:100%;min-width:3px;}
+.pour-legend{
+  display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:8px;
+}
+.pour-legend .item{
+  display:flex;align-items:center;gap:6px;
+  font-size:0.76rem;color:var(--text-dim);
+  font-family:'IBM Plex Mono',monospace;
+}
+.pour-legend .sw{width:9px;height:9px;border-radius:2px;flex:none;}
+
+/* ---------- Tags pills ---------- */
+.tag-pill{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.68rem;
+  letter-spacing:0.03em;
+  color:var(--text-dim);
+  border:1px solid var(--border);
+  padding:3px 9px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+
+/* ---------- Main / grid ---------- */
+main{
+  max-width:1100px;
+  margin:0 auto;
+  padding:18px;
+}
+.empty-state{
+  text-align:center;
+  padding:70px 20px;
+  color:var(--text-mute);
+}
+.empty-state .glyph{font-size:2.4rem;margin-bottom:10px;}
+.empty-state h3{font-family:'Fraunces',serif;font-style:italic;color:var(--text-dim);font-weight:600;font-size:1.4rem;margin:0 0 6px;}
+
+/* Card view */
+#card-view{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  gap:16px;
+}
+.cocktail-card{
+  background:var(--surface);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius-lg);
+  padding:18px;
+  display:flex;flex-direction:column;gap:12px;
+  box-shadow:var(--shadow);
+}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.card-top h2{
+  font-family:'Fraunces',serif;font-style:italic;font-weight:600;
+  font-size:1.5rem;margin:0;color:var(--text);line-height:1.15;
+}
+.card-actions{display:flex;gap:6px;flex:none;}
+.card-actions button{
+  background:transparent;border:1px solid var(--border);color:var(--text-mute);
+  width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:0.95rem;
+}
+.card-actions button:hover{border-color:var(--brass-dim);color:var(--brass-bright);}
+.card-actions button.del:hover{border-color:var(--danger);color:var(--danger);}
+
+.ingredient-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;}
+.ingredient-list li{
+  display:flex;justify-content:space-between;gap:10px;
+  font-size:0.87rem;color:var(--text-dim);
+  border-bottom:1px dashed var(--border-soft);
+  padding-bottom:5px;
+}
+.ingredient-list li .amt{font-family:'IBM Plex Mono',monospace;color:var(--brass-bright);white-space:nowrap;}
+.ingredient-list li .nm{flex:1;}
+
+.card-notes{font-size:0.85rem;color:var(--text-mute);font-style:italic;line-height:1.4;}
+
+.card-tags{display:flex;flex-wrap:wrap;gap:6px;}
+
+.card-ratings{
+  display:flex;gap:22px;
+  padding-top:10px;
+  border-top:1px solid var(--border-soft);
+}
+
+/* List view */
+#list-view{display:flex;flex-direction:column;gap:8px;}
+.cocktail-row{
+  background:var(--surface);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  display:grid;
+  grid-template-columns:minmax(0,1.6fr) minmax(90px,0.8fr) minmax(0,1fr) auto auto;
+  gap:14px;
+  align-items:center;
+}
+.row-name-wrap{min-width:0;}
+.row-name-wrap h3{
+  font-family:'Fraunces',serif;font-style:italic;font-weight:600;
+  font-size:1.1rem;margin:0 0 4px;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row-tags{display:flex;gap:5px;flex-wrap:nowrap;overflow:hidden;}
+.row-pour{min-width:70px;}
+.row-ratings{display:flex;gap:14px;flex-wrap:wrap;}
+.row-actions{display:flex;gap:5px;}
+.row-actions button{
+  background:transparent;border:1px solid var(--border);color:var(--text-mute);
+  width:34px;height:34px;border-radius:7px;cursor:pointer;font-size:0.85rem;
+}
+.row-actions button:hover{border-color:var(--brass-dim);color:var(--brass-bright);}
+.row-actions button.del:hover{border-color:var(--danger);color:var(--danger);}
+
+@media (max-width:760px){
+  .cocktail-row{grid-template-columns:1fr;align-items:stretch;}
+  .row-pour{min-width:0;}
+  .row-actions{justify-content:flex-end;}
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,8,4,0.72);
+  display:none;align-items:flex-start;justify-content:center;
+  padding:20px 14px 40px;
+  overflow-y:auto;
+  z-index:100;
+  backdrop-filter:blur(2px);
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  width:100%;max-width:620px;
+  padding:22px;
+  margin-top:20px;
+  box-shadow:var(--shadow);
+}
+.modal h2{
+  font-family:'Fraunces',serif;font-style:italic;font-weight:600;
+  margin:0 0 4px;font-size:1.5rem;color:var(--brass-bright);
+}
+.modal .modal-sub{color:var(--text-mute);font-size:0.82rem;margin-bottom:18px;}
+.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.form-row label{font-size:0.78rem;color:var(--text-dim);font-weight:600;}
+.form-row input[type="text"],.form-row textarea,.form-row select{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:11px 12px;font-size:0.92rem;width:100%;min-height:44px;
+}
+.form-row textarea{min-height:64px;resize:vertical;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.ing-row{
+  display:grid;
+  grid-template-columns:1.6fr 0.7fr 0.9fr 1fr auto;
+  gap:6px;margin-bottom:8px;align-items:center;
+}
+.ing-row input,.ing-row select{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  border-radius:7px;padding:9px 8px;font-size:0.84rem;min-height:40px;width:100%;
+}
+.ing-row button.rm{
+  background:transparent;border:1px solid var(--border);color:var(--text-mute);
+  width:38px;height:38px;border-radius:7px;cursor:pointer;
+}
+.ing-row button.rm:hover{border-color:var(--danger);color:var(--danger);}
+@media (max-width:560px){
+  .ing-row{grid-template-columns:1fr 1fr;}
+  .two-col{grid-template-columns:1fr;}
+}
+
+.modal-footer{
+  display:flex;justify-content:flex-end;gap:10px;margin-top:18px;
+  border-top:1px solid var(--border-soft);padding-top:16px;
+}
+.modal-close{
+  position:absolute;
+}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;}
+.x-btn{background:none;border:none;color:var(--text-mute);font-size:1.3rem;cursor:pointer;padding:4px 8px;}
+.x-btn:hover{color:var(--text);}
+
+.settings-section{margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border-soft);}
+.settings-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.settings-section h3{font-size:0.85rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-mute);margin:0 0 10px;font-family:'IBM Plex Mono',monospace;}
+.import-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  background:var(--surface-2);border:1px solid var(--brass-dim);color:var(--text);
+  padding:12px 20px;border-radius:999px;font-size:0.86rem;
+  box-shadow:var(--shadow);z-index:200;opacity:0;pointer-events:none;
+  transition:opacity .25s, transform .25s;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>Proof</h1>
+    <div class="sub eyebrow">a private cocktail ledger</div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="settingsBtn" title="Settings & data">⚙</button>
+    <button class="btn" id="addBtn">+ Add Cocktail</button>
+  </div>
+</header>
+
+<div class="filter-wrap">
+  <div class="search-row">
+    <div class="search-box">
+      <span class="ic">⌕</span>
+      <input type="text" id="searchInput" placeholder="Search name or ingredient…">
+    </div>
+    <div class="view-toggle">
+      <button id="viewCardBtn" title="Card view">▦</button>
+      <button id="viewListBtn" title="List view">☰</button>
+    </div>
+    <button class="icon-btn" id="filtersToggleBtn" title="Filters">⚗</button>
+  </div>
+
+  <div class="filters-panel" id="filtersPanel">
+    <div class="filter-group">
+      <label class="eyebrow">Tags — tap to include, tap again to exclude</label>
+      <div class="chip-row" id="tagChips"></div>
+    </div>
+    <div class="filter-group">
+      <label class="eyebrow">Method</label>
+      <div class="chip-row" id="methodChips"></div>
+    </div>
+    <div class="filter-row-inline">
+      <div class="field">
+        <label class="eyebrow">Rated by</label>
+        <select id="ratedBySelect">
+          <option value="either">Either person</option>
+          <option value="both">Both people</option>
+          <option value="p1">Person 1 only</option>
+          <option value="p2">Person 2 only</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="eyebrow">Minimum rating</label>
+        <div class="stars-mini" id="minRatingStars"></div>
+      </div>
+      <div class="field">
+        <label class="eyebrow">Sort by</label>
+        <select id="sortSelect">
+          <option value="name-asc">Name (A–Z)</option>
+          <option value="name-desc">Name (Z–A)</option>
+          <option value="rating-desc">Rating (high–low)</option>
+          <option value="rating-asc">Rating (low–high)</option>
+          <option value="newest">Recently added</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+      </div>
+      <button class="btn ghost small clear-filters" id="clearFiltersBtn">Clear filters</button>
+    </div>
+  </div>
+
+  <div class="result-count" id="resultCount"></div>
+</div>
+
+<main>
+  <div id="card-view"></div>
+  <div id="list-view" style="display:none;"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="glyph">🍸</div>
+    <h3>Nothing on the shelf</h3>
+    <div>No cocktails match your filters, or the ledger is empty. Try clearing filters or add a new recipe.</div>
+  </div>
+</main>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="cocktailModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="modalTitle">New Cocktail</h2>
+        <div class="modal-sub">Fill in what you know — ratios, tags and ratings can always be edited later.</div>
+      </div>
+      <button class="x-btn" id="closeModalBtn">✕</button>
+    </div>
+
+    <form id="cocktailForm">
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <label>Name</label>
+        <input type="text" id="fName" required placeholder="e.g. Old Fashioned">
+      </div>
+      <div class="two-col">
+        <div class="form-row">
+          <label>Method</label>
+          <select id="fMethod">
+            <option>Shake</option>
+            <option>Stir</option>
+            <option>Build</option>
+            <option>Muddle</option>
+            <option>Blend</option>
+            <option>Layer</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Tags (comma separated)</label>
+          <input type="text" id="fTags" placeholder="classic, citrus, strong">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Ingredients</label>
+        <div id="ingredientRows"></div>
+        <button type="button" class="btn ghost small" id="addIngredientBtn">+ Add ingredient</button>
+      </div>
+
+      <div class="form-row">
+        <label>Notes</label>
+        <textarea id="fNotes" placeholder="Garnish, glassware, technique notes…"></textarea>
+      </div>
+
+      <div class="two-col">
+        <div class="form-row">
+          <label id="p1RatingLabel">Rating — Person 1</label>
+          <div class="star-row" id="fRatingP1"></div>
+        </div>
+        <div class="form-row">
+          <label id="p2RatingLabel">Rating — Person 2</label>
+          <div class="star-row" id="fRatingP2"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn ghost" id="cancelModalBtn">Cancel</button>
+        <button type="submit" class="btn">Save Cocktail</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>Settings & Data</h2>
+        <div class="modal-sub">Names, backups, and storage.</div>
+      </div>
+      <button class="x-btn" id="closeSettingsBtn">✕</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Names</h3>
+      <div class="two-col">
+        <div class="form-row">
+          <label>Person 1</label>
+          <input type="text" id="p1NameInput">
+        </div>
+        <div class="form-row">
+          <label>Person 2</label>
+          <input type="text" id="p2NameInput">
+        </div>
+      </div>
+      <button class="btn small" id="saveNamesBtn">Save names</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Import / Export</h3>
+      <div class="import-actions">
+        <button class="btn ghost small" id="exportBtn">⇩ Export JSON</button>
+        <button class="btn ghost small" id="importBtn">⇧ Import JSON</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </div>
+      <div class="modal-sub" style="margin-top:8px;">Export saves your whole ledger as a .json file. Import lets you merge or replace with a backup file.</div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Danger zone</h3>
+      <button class="btn danger small" id="clearAllBtn">Clear all data</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "proof_cocktail_db_v1";
+  var TYPE_COLORS = {
+    spirit:"var(--brass)", liqueur:"var(--ruby)", mixer:"var(--teal)",
+    juice:"var(--green)", syrup:"var(--gold-lt)", bitters:"var(--rust)",
+    garnish:"var(--text-mute)", other:"var(--text-mute)"
+  };
+  var METHODS = ["Shake","Stir","Build","Muddle","Blend","Layer"];
+  var UNITS = ["oz","ml","cl","part","dash","tsp","tbsp","splash","top","whole"];
+  var TYPES = ["spirit","liqueur","mixer","juice","syrup","bitters","garnish","other"];
+
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+
+  function seedData(){
+    return [
+      mk("Old Fashioned","Build",["classic","whiskey","strong"],
+        [ing("Bourbon",2,"oz","spirit"),ing("Simple syrup",0.25,"oz","syrup"),ing("Angostura bitters",2,"dash","bitters"),ing("Orange peel",1,"whole","garnish")],
+        "Stir over one large ice cube. Express the orange peel over the top.", {p1:5,p2:4}, Date.now()-1000*60*60*24*30),
+      mk("Margarita","Shake",["classic","tequila","citrus","shaken"],
+        [ing("Blanco tequila",2,"oz","spirit"),ing("Triple sec",1,"oz","liqueur"),ing("Lime juice",1,"oz","juice")],
+        "Salt half the rim. Serve up or on the rocks.", {p1:4,p2:5}, Date.now()-1000*60*60*24*25),
+      mk("Daiquiri","Shake",["classic","rum","citrus","refreshing"],
+        [ing("White rum",2,"oz","spirit"),ing("Lime juice",1,"oz","juice"),ing("Simple syrup",0.75,"oz","syrup")],
+        "Shake hard, fine-strain into a coupe.", {p1:3,p2:4}, Date.now()-1000*60*60*24*20),
+      mk("Negroni","Stir",["classic","gin","bitter","aperitif"],
+        [ing("Gin",1,"oz","spirit"),ing("Campari",1,"oz","liqueur"),ing("Sweet vermouth",1,"oz","liqueur"),ing("Orange peel",1,"whole","garnish")],
+        "Equal parts. Stir, big rock, orange oils expressed over the top.", {p1:5,p2:2}, Date.now()-1000*60*60*24*15),
+      mk("Whiskey Sour","Shake",["classic","whiskey","citrus","shaken"],
+        [ing("Bourbon",2,"oz","spirit"),ing("Lemon juice",0.75,"oz","juice"),ing("Simple syrup",0.75,"oz","syrup"),ing("Egg white",0.5,"oz","other"),ing("Angostura bitters",2,"dash","bitters")],
+        "Dry shake first to emulsify, then shake again with ice.", {p1:4,p2:4}, Date.now()-1000*60*60*24*10),
+      mk("Espresso Martini","Shake",["modern","vodka","coffee","dessert","shaken"],
+        [ing("Vodka",1.5,"oz","spirit"),ing("Coffee liqueur",1,"oz","liqueur"),ing("Fresh espresso",1,"oz","mixer"),ing("Simple syrup",0.25,"oz","syrup")],
+        "Shake hard to build the crema. Three coffee beans to garnish.", {p1:0,p2:0}, Date.now()-1000*60*60*24*2)
+    ];
+  }
+  function ing(name,amount,unit,type){ return {name:name,amount:amount,unit:unit,type:type}; }
+  function mk(name,method,tags,ingredients,notes,ratings,dateAdded){
+    return {id:uid(),name:name,method:method,tags:tags,ingredients:ingredients,notes:notes,ratings:ratings,dateAdded:dateAdded};
+  }
+
+  function defaultDB(){
+    return { cocktails: seedData(), people:{p1:"Me",p2:"Partner"}, prefs:{view:"card"} };
+  }
+
+  var db;
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw){ db = defaultDB(); save(); return; }
+      db = JSON.parse(raw);
+      if(!db.cocktails) db.cocktails = [];
+      if(!db.people) db.people = {p1:"Me",p2:"Partner"};
+      if(!db.prefs) db.prefs = {view:"card"};
+    }catch(e){
+      console.error("Load failed, starting fresh.",e);
+      db = defaultDB();
+    }
+  }
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+    catch(e){ console.error("Save failed",e); showToast("Save failed — storage may be full or unavailable."); }
+  }
+
+  var filters = {
+    search:"",
+    tagState:{},      // tagName -> 'include' | 'exclude'
+    method:null,
+    ratedBy:"either",
+    minRating:0,
+    sort:"name-asc"
+  };
+
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._h);
+    showToast._h = setTimeout(function(){ t.classList.remove("show"); }, 2400);
+  }
+
+  /* ---------- derived data ---------- */
+  function allTags(){
+    var set = {};
+    db.cocktails.forEach(function(c){ (c.tags||[]).forEach(function(t){ set[t.toLowerCase()] = true; }); });
+    return Object.keys(set).sort();
+  }
+
+  function avgRating(c){
+    var vals = [c.ratings.p1||0, c.ratings.p2||0].filter(function(v){return v>0;});
+    if(!vals.length) return 0;
+    return vals.reduce(function(a,b){return a+b;},0)/vals.length;
+  }
+
+  function matchesFilters(c){
+    var s = filters.search.trim().toLowerCase();
+    if(s){
+      var nameHit = c.name.toLowerCase().indexOf(s) !== -1;
+      var ingHit = (c.ingredients||[]).some(function(i){ return i.name.toLowerCase().indexOf(s) !== -1; });
+      if(!nameHit && !ingHit) return false;
+    }
+    var cTags = (c.tags||[]).map(function(t){return t.toLowerCase();});
+    for(var tag in filters.tagState){
+      var state = filters.tagState[tag];
+      if(state === "include" && cTags.indexOf(tag) === -1) return false;
+      if(state === "exclude" && cTags.indexOf(tag) !== -1) return false;
+    }
+    if(filters.method && c.method !== filters.method) return false;
+
+    if(filters.minRating > 0){
+      var p1 = c.ratings.p1||0, p2 = c.ratings.p2||0;
+      var pass;
+      if(filters.ratedBy === "either") pass = Math.max(p1,p2) >= filters.minRating;
+      else if(filters.ratedBy === "both") pass = Math.min(p1,p2) >= filters.minRating;
+      else if(filters.ratedBy === "p1") pass = p1 >= filters.minRating;
+      else pass = p2 >= filters.minRating;
+      if(!pass) return false;
+    }
+    return true;
+  }
+
+  function sortList(list){
+    var arr = list.slice();
+    switch(filters.sort){
+      case "name-asc": arr.sort(function(a,b){return a.name.localeCompare(b.name);}); break;
+      case "name-desc": arr.sort(function(a,b){return b.name.localeCompare(a.name);}); break;
+      case "rating-desc": arr.sort(function(a,b){return avgRating(b)-avgRating(a);}); break;
+      case "rating-asc": arr.sort(function(a,b){return avgRating(a)-avgRating(b);}); break;
+      case "newest": arr.sort(function(a,b){return b.dateAdded-a.dateAdded;}); break;
+      case "oldest": arr.sort(function(a,b){return a.dateAdded-b.dateAdded;}); break;
+    }
+    return arr;
+  }
+
+  function getFiltered(){
+    return sortList(db.cocktails.filter(matchesFilters));
+  }
+
+  /* ---------- rendering ---------- */
+  function starRow(value, onSet, size){
+    var wrap = document.createElement("div");
+    wrap.className = "star-row";
+    for(var i=1;i<=5;i++){
+      (function(i){
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "star-btn" + (i<=value ? " filled":"");
+        b.textContent = i<=value ? "★" : "☆";
+        b.title = i + " star" + (i>1?"s":"");
+        b.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          var newVal = (value === i) ? 0 : i; // tap same top star to clear
+          onSet(newVal);
+        });
+        wrap.appendChild(b);
+      })(i);
+    }
+    return wrap;
+  }
+
+  function renderPourBar(ingredients){
+    var relevant = (ingredients||[]).filter(function(i){ return i.type !== "garnish" && i.amount > 0; });
+    var total = relevant.reduce(function(s,i){return s+parseFloat(i.amount||0);},0);
+    var bar = document.createElement("div");
+    bar.className = "pour-bar";
+    if(total <= 0){ bar.style.opacity = 0.3; return bar; }
+    relevant.forEach(function(i){
+      var seg = document.createElement("div");
+      seg.className = "pour-seg";
+      seg.style.width = ((parseFloat(i.amount)/total)*100) + "%";
+      seg.style.background = TYPE_COLORS[i.type] || TYPE_COLORS.other;
+      seg.title = i.amount + " " + i.unit + " " + i.name;
+      bar.appendChild(seg);
+    });
+    return bar;
+  }
+
+  function pourLegend(ingredients){
+    var relevant = (ingredients||[]).filter(function(i){ return i.type !== "garnish" && i.amount > 0; });
+    var wrap = document.createElement("div");
+    wrap.className = "pour-legend";
+    relevant.forEach(function(i){
+      var item = document.createElement("div");
+      item.className = "item";
+      var sw = document.createElement("span");
+      sw.className = "sw";
+      sw.style.background = TYPE_COLORS[i.type] || TYPE_COLORS.other;
+      item.appendChild(sw);
+      item.appendChild(document.createTextNode(i.amount + " " + i.unit + " " + i.name));
+      wrap.appendChild(item);
+    });
+    return wrap;
+  }
+
+  function tagPills(tags){
+    var wrap = document.createElement("div");
+    wrap.className = "card-tags";
+    (tags||[]).forEach(function(t){
+      var p = document.createElement("span");
+      p.className = "tag-pill";
+      p.textContent = t;
+      wrap.appendChild(p);
+    });
+    return wrap;
+  }
+
+  function ratingBlock(label, value, onSet){
+    var wrap = document.createElement("div");
+    wrap.className = "rating-block";
+    var who = document.createElement("div");
+    who.className = "who";
+    who.textContent = label;
+    wrap.appendChild(who);
+    wrap.appendChild(starRow(value, onSet));
+    return wrap;
+  }
+
+  function renderCardView(list){
+    var root = document.getElementById("card-view");
+    root.innerHTML = "";
+    list.forEach(function(c){
+      var card = document.createElement("div");
+      card.className = "cocktail-card";
+
+      var top = document.createElement("div");
+      top.className = "card-top";
+      var h2 = document.createElement("h2");
+      h2.textContent = c.name;
+      top.appendChild(h2);
+      var actions = document.createElement("div");
+      actions.className = "card-actions";
+      actions.appendChild(mkActionBtn("✎", function(){ openCocktailModal(c); }));
+      actions.appendChild(mkActionBtn("✕", function(){ deleteCocktail(c.id); }, "del"));
+      top.appendChild(actions);
+      card.appendChild(top);
+
+      var badgeRow = document.createElement("div");
+      badgeRow.style.display="flex"; badgeRow.style.gap="8px"; badgeRow.style.alignItems="center";
+      var badge = document.createElement("span");
+      badge.className = "method-badge";
+      badge.textContent = c.method;
+      badgeRow.appendChild(badge);
+      card.appendChild(badgeRow);
+
+      var eyebrow = document.createElement("div");
+      eyebrow.className = "eyebrow";
+      eyebrow.style.marginTop = "2px";
+      eyebrow.textContent = "The Pour";
+      card.appendChild(eyebrow);
+      card.appendChild(renderPourBar(c.ingredients));
+      card.appendChild(pourLegend(c.ingredients));
+
+      var ul = document.createElement("ul");
+      ul.className = "ingredient-list";
+      (c.ingredients||[]).forEach(function(i){
+        var li = document.createElement("li");
+        var nm = document.createElement("span"); nm.className="nm"; nm.textContent = i.name;
+        var amt = document.createElement("span"); amt.className="amt"; amt.textContent = (i.amount?i.amount+" "+i.unit:"");
+        li.appendChild(nm); li.appendChild(amt);
+        ul.appendChild(li);
+      });
+      card.appendChild(ul);
+
+      if(c.notes){
+        var notes = document.createElement("div");
+        notes.className = "card-notes";
+        notes.textContent = c.notes;
+        card.appendChild(notes);
+      }
+
+      card.appendChild(tagPills(c.tags));
+
+      var ratings = document.createElement("div");
+      ratings.className = "card-ratings";
+      ratings.appendChild(ratingBlock(db.people.p1, c.ratings.p1||0, function(v){ setRating(c.id,"p1",v); }));
+      ratings.appendChild(ratingBlock(db.people.p2, c.ratings.p2||0, function(v){ setRating(c.id,"p2",v); }));
+      card.appendChild(ratings);
+
+      root.appendChild(card);
+    });
+  }
+
+  function mkActionBtn(label, onClick, cls){
+    var b = document.createElement("button");
+    b.textContent = label;
+    if(cls) b.className = cls;
+    b.addEventListener("click", function(ev){ ev.stopPropagation(); onClick(); });
+    return b;
+  }
+
+  function renderListView(list){
+    var root = document.getElementById("list-view");
+    root.innerHTML = "";
+    list.forEach(function(c){
+      var row = document.createElement("div");
+      row.className = "cocktail-row";
+
+      var nameWrap = document.createElement("div");
+      nameWrap.className = "row-name-wrap";
+      var h3 = document.createElement("h3");
+      h3.textContent = c.name;
+      nameWrap.appendChild(h3);
+      var badge = document.createElement("span");
+      badge.className = "method-badge";
+      badge.textContent = c.method;
+      nameWrap.appendChild(badge);
+      var rt = document.createElement("div");
+      rt.className = "row-tags";
+      rt.style.marginTop = "6px";
+      (c.tags||[]).slice(0,4).forEach(function(t){
+        var p = document.createElement("span"); p.className="tag-pill"; p.textContent=t; rt.appendChild(p);
+      });
+      nameWrap.appendChild(rt);
+      row.appendChild(nameWrap);
+
+      var pourWrap = document.createElement("div");
+      pourWrap.className = "row-pour";
+      pourWrap.appendChild(renderPourBar(c.ingredients));
+      row.appendChild(pourWrap);
+
+      var ingSummary = document.createElement("div");
+      ingSummary.style.fontSize = "0.8rem";
+      ingSummary.style.color = "var(--text-mute)";
+      ingSummary.textContent = (c.ingredients||[]).map(function(i){return i.name;}).join(", ");
+      ingSummary.style.overflow="hidden"; ingSummary.style.textOverflow="ellipsis"; ingSummary.style.whiteSpace="nowrap";
+      row.appendChild(ingSummary);
+
+      var ratings = document.createElement("div");
+      ratings.className = "row-ratings";
+      ratings.appendChild(ratingBlock(db.people.p1, c.ratings.p1||0, function(v){ setRating(c.id,"p1",v); }));
+      ratings.appendChild(ratingBlock(db.people.p2, c.ratings.p2||0, function(v){ setRating(c.id,"p2",v); }));
+      row.appendChild(ratings);
+
+      var actions = document.createElement("div");
+      actions.className = "row-actions";
+      actions.appendChild(mkActionBtn("✎", function(){ openCocktailModal(c); }));
+      actions.appendChild(mkActionBtn("✕", function(){ deleteCocktail(c.id); }, "del"));
+      row.appendChild(actions);
+
+      root.appendChild(row);
+    });
+  }
+
+  function renderTagChips(){
+    var root = document.getElementById("tagChips");
+    root.innerHTML = "";
+    allTags().forEach(function(tag){
+      var chip = document.createElement("div");
+      var state = filters.tagState[tag];
+      chip.className = "chip" + (state==="include"?" include":"") + (state==="exclude"?" exclude":"");
+      chip.textContent = (state==="include"?"✓ ":"") + (state==="exclude"?"⊘ ":"") + tag;
+      chip.addEventListener("click", function(){
+        var cur = filters.tagState[tag];
+        if(!cur) filters.tagState[tag] = "include";
+        else if(cur==="include") filters.tagState[tag] = "exclude";
+        else delete filters.tagState[tag];
+        renderAll();
+      });
+      root.appendChild(chip);
+    });
+    if(!allTags().length){
+      root.innerHTML = "<span class='eyebrow'>No tags yet</span>";
+    }
+  }
+
+  function renderMethodChips(){
+    var root = document.getElementById("methodChips");
+    root.innerHTML = "";
+    METHODS.forEach(function(m){
+      var chip = document.createElement("div");
+      chip.className = "chip" + (filters.method===m ? " method-active":"");
+      chip.textContent = m;
+      chip.addEventListener("click", function(){
+        filters.method = (filters.method===m) ? null : m;
+        renderAll();
+      });
+      root.appendChild(chip);
+    });
+  }
+
+  function renderMinRatingStars(){
+    var root = document.getElementById("minRatingStars");
+    root.innerHTML = "";
+    root.appendChild(starRow(filters.minRating, function(v){ filters.minRating = v; renderAll(); }));
+  }
+
+  function renderCounts(list){
+    var el = document.getElementById("resultCount");
+    el.textContent = list.length + " of " + db.cocktails.length + " cocktail" + (db.cocktails.length===1?"":"s");
+  }
+
+  function renderAll(){
+    var list = getFiltered();
+    var view = db.prefs.view;
+    document.getElementById("card-view").style.display = view==="card" ? "grid":"none";
+    document.getElementById("list-view").style.display = view==="list" ? "flex":"none";
+    document.getElementById("viewCardBtn").classList.toggle("active", view==="card");
+    document.getElementById("viewListBtn").classList.toggle("active", view==="list");
+
+    document.getElementById("emptyState").style.display = list.length ? "none":"block";
+
+    if(view==="card") renderCardView(list); else renderListView(list);
+    renderTagChips();
+    renderMethodChips();
+    renderMinRatingStars();
+    renderCounts(list);
+    document.getElementById("p1RatingLabel").textContent = "Rating — " + db.people.p1;
+    document.getElementById("p2RatingLabel").textContent = "Rating — " + db.people.p2;
+  }
+
+  function setRating(id, who, value){
+    var c = db.cocktails.find(function(c){return c.id===id;});
+    if(!c) return;
+    c.ratings[who] = value;
+    save();
+    renderAll();
+  }
+
+  function deleteCocktail(id){
+    var c = db.cocktails.find(function(c){return c.id===id;});
+    if(!c) return;
+    if(!confirm('Delete "' + c.name + '"? This cannot be undone.')) return;
+    db.cocktails = db.cocktails.filter(function(c){return c.id!==id;});
+    save();
+    renderAll();
+    showToast("Deleted " + c.name);
+  }
+
+  /* ---------- Add/Edit modal ---------- */
+  var editingId = null;
+
+  function ingredientRow(data){
+    data = data || {name:"",amount:"",unit:"oz",type:"spirit"};
+    var row = document.createElement("div");
+    row.className = "ing-row";
+
+    var nameInp = document.createElement("input");
+    nameInp.type="text"; nameInp.placeholder="Ingredient"; nameInp.value=data.name; nameInp.className="ing-name";
+
+    var amtInp = document.createElement("input");
+    amtInp.type="number"; amtInp.step="0.05"; amtInp.min="0"; amtInp.placeholder="Amt"; amtInp.value=data.amount; amtInp.className="ing-amt";
+
+    var unitSel = document.createElement("select"); unitSel.className="ing-unit";
+    UNITS.forEach(function(u){ var o=document.createElement("option"); o.value=u; o.textContent=u; if(u===data.unit) o.selected=true; unitSel.appendChild(o); });
+
+    var typeSel = document.createElement("select"); typeSel.className="ing-type";
+    TYPES.forEach(function(t){ var o=document.createElement("option"); o.value=t; o.textContent=t; if(t===data.type) o.selected=true; typeSel.appendChild(o); });
+
+    var rm = document.createElement("button");
+    rm.type="button"; rm.className="rm"; rm.textContent="✕";
+    rm.addEventListener("click", function(){ row.remove(); });
+
+    row.appendChild(nameInp); row.appendChild(amtInp); row.appendChild(unitSel); row.appendChild(typeSel); row.appendChild(rm);
+    return row;
+  }
+
+  function openCocktailModal(c){
+    editingId = c ? c.id : null;
+    document.getElementById("modalTitle").textContent = c ? "Edit Cocktail" : "New Cocktail";
+    document.getElementById("fName").value = c ? c.name : "";
+    document.getElementById("fMethod").value = c ? c.method : "Shake";
+    document.getElementById("fTags").value = c ? (c.tags||[]).join(", ") : "";
+    document.getElementById("fNotes").value = c ? (c.notes||"") : "";
+
+    var rows = document.getElementById("ingredientRows");
+    rows.innerHTML = "";
+    var ingredients = c ? c.ingredients : [ing("","","oz","spirit")];
+    ingredients.forEach(function(i){ rows.appendChild(ingredientRow(i)); });
+
+    var p1val = c ? (c.ratings.p1||0) : 0;
+    var p2val = c ? (c.ratings.p2||0) : 0;
+    rebuildFormRating("fRatingP1", p1val);
+    rebuildFormRating("fRatingP2", p2val);
+
+    document.getElementById("p1RatingLabel").textContent = "Rating — " + db.people.p1;
+    document.getElementById("p2RatingLabel").textContent = "Rating — " + db.people.p2;
+
+    document.getElementById("cocktailModalOverlay").classList.add("open");
+  }
+
+  var formRatingValues = {fRatingP1:0, fRatingP2:0};
+  function rebuildFormRating(fieldId, value){
+    formRatingValues[fieldId] = value;
+    var wrap = document.getElementById(fieldId);
+    wrap.innerHTML = "";
+    wrap.appendChild(starRow(value, function(v){ rebuildFormRating(fieldId, v); }));
+  }
+
+  function closeCocktailModal(){
+    document.getElementById("cocktailModalOverlay").classList.remove("open");
+    editingId = null;
+  }
+
+  function collectIngredients(){
+    var rows = document.querySelectorAll("#ingredientRows .ing-row");
+    var list = [];
+    rows.forEach(function(row){
+      var name = row.querySelector(".ing-name").value.trim();
+      var amount = parseFloat(row.querySelector(".ing-amt").value) || 0;
+      var unit = row.querySelector(".ing-unit").value;
+      var type = row.querySelector(".ing-type").value;
+      if(name) list.push({name:name, amount:amount, unit:unit, type:type});
+    });
+    return list;
+  }
+
+  document.getElementById("cocktailForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var name = document.getElementById("fName").value.trim();
+    if(!name){ showToast("Please name the cocktail."); return; }
+    var method = document.getElementById("fMethod").value;
+    var tags = document.getElementById("fTags").value.split(",").map(function(t){return t.trim();}).filter(Boolean);
+    var notes = document.getElementById("fNotes").value.trim();
+    var ingredients = collectIngredients();
+    var ratings = { p1: formRatingValues.fRatingP1||0, p2: formRatingValues.fRatingP2||0 };
+
+    if(editingId){
+      var c = db.cocktails.find(function(c){return c.id===editingId;});
+      c.name=name; c.method=method; c.tags=tags; c.notes=notes; c.ingredients=ingredients; c.ratings=ratings;
+      showToast("Saved " + name);
+    } else {
+      db.cocktails.push({id:uid(), name:name, method:method, tags:tags, notes:notes, ingredients:ingredients, ratings:ratings, dateAdded:Date.now()});
+      showToast("Added " + name);
+    }
+    save();
+    closeCocktailModal();
+    renderAll();
+  });
+
+  document.getElementById("addBtn").addEventListener("click", function(){ openCocktailModal(null); });
+  document.getElementById("closeModalBtn").addEventListener("click", closeCocktailModal);
+  document.getElementById("cancelModalBtn").addEventListener("click", closeCocktailModal);
+  document.getElementById("cocktailModalOverlay").addEventListener("click", function(ev){ if(ev.target===this) closeCocktailModal(); });
+  document.getElementById("addIngredientBtn").addEventListener("click", function(){
+    document.getElementById("ingredientRows").appendChild(ingredientRow());
+  });
+
+  /* ---------- Settings modal ---------- */
+  function openSettingsModal(){
+    document.getElementById("p1NameInput").value = db.people.p1;
+    document.getElementById("p2NameInput").value = db.people.p2;
+    document.getElementById("settingsModalOverlay").classList.add("open");
+  }
+  function closeSettingsModal(){ document.getElementById("settingsModalOverlay").classList.remove("open"); }
+
+  document.getElementById("settingsBtn").addEventListener("click", openSettingsModal);
+  document.getElementById("closeSettingsBtn").addEventListener("click", closeSettingsModal);
+  document.getElementById("settingsModalOverlay").addEventListener("click", function(ev){ if(ev.target===this) closeSettingsModal(); });
+
+  document.getElementById("saveNamesBtn").addEventListener("click", function(){
+    var p1 = document.getElementById("p1NameInput").value.trim() || "Person 1";
+    var p2 = document.getElementById("p2NameInput").value.trim() || "Person 2";
+    db.people.p1 = p1; db.people.p2 = p2;
+    save();
+    renderAll();
+    showToast("Names updated");
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(db, null, 2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var stamp = new Date().toISOString().slice(0,10);
+    a.href = url; a.download = "proof-cocktails-" + stamp + ".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("Exported");
+  });
+
+  document.getElementById("importBtn").addEventListener("click", function(){
+    document.getElementById("importFile").click();
+  });
+
+  document.getElementById("importFile").addEventListener("change", function(ev){
+    var file = ev.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var parsed;
+      try{ parsed = JSON.parse(reader.result); }
+      catch(e){ showToast("That file isn't valid JSON."); return; }
+      if(!parsed || !Array.isArray(parsed.cocktails)){ showToast("File doesn't look like a Proof export."); return; }
+
+      var doReplace = confirm(
+        "Import " + parsed.cocktails.length + " cocktail(s).\n\n" +
+        "OK = MERGE with your current ledger (matching IDs get updated, new ones added).\n" +
+        "Cancel = choose to REPLACE everything instead."
+      );
+      if(doReplace){
+        var byId = {};
+        db.cocktails.forEach(function(c){ byId[c.id]=c; });
+        parsed.cocktails.forEach(function(c){ byId[c.id]=c; });
+        db.cocktails = Object.keys(byId).map(function(k){return byId[k];});
+        if(parsed.people){ db.people.p1 = parsed.people.p1 || db.people.p1; db.people.p2 = parsed.people.p2 || db.people.p2; }
+        save(); renderAll();
+        showToast("Merged import");
+      } else {
+        var doFullReplace = confirm("Replace ALL current cocktails with the imported file? This cannot be undone.");
+        if(doFullReplace){
+          db.cocktails = parsed.cocktails;
+          if(parsed.people) db.people = parsed.people;
+          save(); renderAll();
+          showToast("Replaced with import");
+        }
+      }
+      ev.target.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById("clearAllBtn").addEventListener("click", function(){
+    if(!confirm("Delete every cocktail permanently? This cannot be undone.")) return;
+    if(!confirm("Really sure? Consider exporting a backup first.")) return;
+    db.cocktails = [];
+    save(); renderAll();
+    closeSettingsModal();
+    showToast("Ledger cleared");
+  });
+
+  /* ---------- filter bar wiring ---------- */
+  document.getElementById("searchInput").addEventListener("input", function(ev){
+    filters.search = ev.target.value; renderAll();
+  });
+  document.getElementById("viewCardBtn").addEventListener("click", function(){ db.prefs.view="card"; save(); renderAll(); });
+  document.getElementById("viewListBtn").addEventListener("click", function(){ db.prefs.view="list"; save(); renderAll(); });
+  document.getElementById("filtersToggleBtn").addEventListener("click", function(){
+    document.getElementById("filtersPanel").classList.toggle("open");
+  });
+  document.getElementById("ratedBySelect").addEventListener("change", function(ev){ filters.ratedBy = ev.target.value; renderAll(); });
+  document.getElementById("sortSelect").addEventListener("change", function(ev){ filters.sort = ev.target.value; renderAll(); });
+  document.getElementById("clearFiltersBtn").addEventListener("click", function(){
+    filters.search=""; filters.tagState={}; filters.method=null; filters.minRating=0; filters.ratedBy="either"; filters.sort="name-asc";
+    document.getElementById("searchInput").value="";
+    document.getElementById("ratedBySelect").value="either";
+    document.getElementById("sortSelect").value="name-asc";
+    renderAll();
+  });
+
+  /* ---------- init ---------- */
+  load();
+  renderAll();
+})();
+</script>
+</body>
+</html>

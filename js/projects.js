@@ -84,6 +84,16 @@ const PROJECTS = [
     demo: "https://kovnein.github.io/odds-n-ends/projects/ambient-photos.html",
     tags: ["single-file", "Google", "photos"]
   },
+  
+  {
+    title: "Proof - private cocktail ledger",
+    description: "A way to track the cocktails we've made or want to try.",
+    lang: "html",
+    status: "live",
+    repo: "",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/proof-cocktail-ledger.html",
+    tags: ["single-file", "cocktails", "database", "local"]
+  },
 
   {
     title: "SPILL - Tile based word game",
