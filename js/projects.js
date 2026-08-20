@@ -76,6 +76,16 @@ const PROJECTS = [
   },
 
   {
+    title: "Ambient Photos Player",
+    description: "A way to set a PC up to play an Google Photos random slideshow player.",
+    lang: "html",
+    status: "live",
+    repo: "",
+    demo: "https://kovnein.github.io/odds-n-ends/projects/ambient-photos.html",
+    tags: ["single-file", "Google", "photos"]
+  },
+
+  {
     title: "SPILL - Tile based word game",
     description: "A tile based word game inspired by Bananagrams.",
     lang: "html",
