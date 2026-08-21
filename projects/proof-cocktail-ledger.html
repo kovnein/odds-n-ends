@@ -245,6 +245,24 @@ header.top{
   white-space:nowrap;
 }
 
+.glass-badge{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.68rem;
+  letter-spacing:0.08em;
+  color:var(--text-dim);
+  border:1px solid var(--border);
+  padding:4px 9px;
+  border-radius:5px;
+  display:inline-block;
+  white-space:nowrap;
+}
+.badge-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.meta-line{font-size:0.85rem;color:var(--text-dim);}
+.meta-line .lbl{
+  font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;
+  font-size:0.68rem;color:var(--text-mute);margin-right:7px;
+}
+
 /* ---------- Pour bar (signature element) ---------- */
 .pour-bar{
   display:flex;
@@ -436,6 +454,15 @@ main{
 .x-btn{background:none;border:none;color:var(--text-mute);font-size:1.3rem;cursor:pointer;padding:4px 8px;}
 .x-btn:hover{color:var(--text);}
 
+.share-textarea{
+  width:100%;min-height:230px;background:var(--surface);border:1px solid var(--border);
+  color:var(--text-dim);border-radius:8px;padding:12px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.78rem;line-height:1.5;
+  resize:vertical;
+}
+.share-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.custom-glass-input{margin-top:8px;}
+
 .settings-section{margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border-soft);}
 .settings-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
 .settings-section h3{font-size:0.85rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-mute);margin:0 0 10px;font-family:'IBM Plex Mono',monospace;}
@@ -558,9 +585,15 @@ main{
           </select>
         </div>
         <div class="form-row">
-          <label>Tags (comma separated)</label>
-          <input type="text" id="fTags" placeholder="classic, citrus, strong">
+          <label>Glass</label>
+          <select id="fGlass"></select>
+          <input type="text" id="fGlassCustom" class="custom-glass-input" placeholder="Name your glass" style="display:none;">
         </div>
+      </div>
+
+      <div class="form-row">
+        <label>Tags (comma separated)</label>
+        <input type="text" id="fTags" placeholder="classic, citrus, strong">
       </div>
 
       <div class="form-row">
@@ -570,8 +603,13 @@ main{
       </div>
 
       <div class="form-row">
+        <label>Garnish</label>
+        <input type="text" id="fGarnish" placeholder="e.g. Orange peel, brandied cherry">
+      </div>
+
+      <div class="form-row">
         <label>Notes</label>
-        <textarea id="fNotes" placeholder="Garnish, glassware, technique notes…"></textarea>
+        <textarea id="fNotes" placeholder="Technique notes, prep tips…"></textarea>
       </div>
 
       <div class="two-col">
@@ -630,8 +668,35 @@ main{
     </div>
 
     <div class="settings-section">
+      <h3>Import a shared recipe</h3>
+      <div class="modal-sub" style="margin-top:0;margin-bottom:8px;">Paste a recipe someone shared with you via Share (email/WhatsApp text) below.</div>
+      <textarea id="pasteImportArea" class="share-textarea" style="min-height:110px;" placeholder="Paste the shared message here…"></textarea>
+      <button class="btn ghost small" id="pasteImportBtn" style="margin-top:10px;">Import from pasted text</button>
+    </div>
+
+    <div class="settings-section">
       <h3>Danger zone</h3>
       <button class="btn danger small" id="clearAllBtn">Clear all data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="shareModalTitle">Share Recipe</h2>
+        <div class="modal-sub">Readable text for email or WhatsApp — includes hidden data so it can be added straight to another Proof ledger via Settings → Import a shared recipe.</div>
+      </div>
+      <button class="x-btn" id="closeShareBtn">✕</button>
+    </div>
+    <textarea class="share-textarea" id="shareTextArea" readonly></textarea>
+    <div class="share-actions">
+      <button class="btn small" id="shareNativeBtn" style="display:none;">Share…</button>
+      <button class="btn ghost small" id="shareCopyBtn">Copy text</button>
+      <button class="btn ghost small" id="shareEmailBtn">Email</button>
+      <button class="btn ghost small" id="shareWhatsappBtn">WhatsApp</button>
     </div>
   </div>
 </div>
@@ -650,39 +715,61 @@ main{
   };
   var METHODS = ["Shake","Stir","Build","Muddle","Blend","Layer"];
   var UNITS = ["oz","ml","cl","part","dash","tsp","tbsp","splash","top","whole"];
-  var TYPES = ["spirit","liqueur","mixer","juice","syrup","bitters","garnish","other"];
+  var TYPES = ["spirit","liqueur","mixer","juice","syrup","bitters","other"];
+  var GLASSES = ["Rocks / Old Fashioned","Coupe","Martini / Cocktail","Nick & Nora","Highball",
+    "Collins","Hurricane","Copper Mug","Wine Glass","Champagne Flute","Shot Glass",
+    "Irish Coffee Mug","Margarita Glass","Snifter","Tiki Mug"];
+  var CUSTOM_GLASS = "Custom…";
+  var SHARE_START = "[PROOF-DATA]";
+  var SHARE_END = "[/PROOF-DATA]";
 
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 
   function seedData(){
     return [
-      mk("Old Fashioned","Build",["classic","whiskey","strong"],
-        [ing("Bourbon",2,"oz","spirit"),ing("Simple syrup",0.25,"oz","syrup"),ing("Angostura bitters",2,"dash","bitters"),ing("Orange peel",1,"whole","garnish")],
-        "Stir over one large ice cube. Express the orange peel over the top.", {p1:5,p2:4}, Date.now()-1000*60*60*24*30),
-      mk("Margarita","Shake",["classic","tequila","citrus","shaken"],
+      mk("Old Fashioned","Build","Rocks / Old Fashioned",["classic","whiskey","strong"],
+        [ing("Bourbon",2,"oz","spirit"),ing("Simple syrup",0.25,"oz","syrup"),ing("Angostura bitters",2,"dash","bitters")],
+        "Orange peel","Stir over one large ice cube. Express the orange peel over the top.", {p1:5,p2:4}, Date.now()-1000*60*60*24*30),
+      mk("Margarita","Shake","Margarita Glass",["classic","tequila","citrus","shaken"],
         [ing("Blanco tequila",2,"oz","spirit"),ing("Triple sec",1,"oz","liqueur"),ing("Lime juice",1,"oz","juice")],
-        "Salt half the rim. Serve up or on the rocks.", {p1:4,p2:5}, Date.now()-1000*60*60*24*25),
-      mk("Daiquiri","Shake",["classic","rum","citrus","refreshing"],
+        "Lime wheel, salt rim","Salt half the rim. Serve up or on the rocks.", {p1:4,p2:5}, Date.now()-1000*60*60*24*25),
+      mk("Daiquiri","Shake","Coupe",["classic","rum","citrus","refreshing"],
         [ing("White rum",2,"oz","spirit"),ing("Lime juice",1,"oz","juice"),ing("Simple syrup",0.75,"oz","syrup")],
-        "Shake hard, fine-strain into a coupe.", {p1:3,p2:4}, Date.now()-1000*60*60*24*20),
-      mk("Negroni","Stir",["classic","gin","bitter","aperitif"],
-        [ing("Gin",1,"oz","spirit"),ing("Campari",1,"oz","liqueur"),ing("Sweet vermouth",1,"oz","liqueur"),ing("Orange peel",1,"whole","garnish")],
-        "Equal parts. Stir, big rock, orange oils expressed over the top.", {p1:5,p2:2}, Date.now()-1000*60*60*24*15),
-      mk("Whiskey Sour","Shake",["classic","whiskey","citrus","shaken"],
+        "Lime wheel","Shake hard, fine-strain into a coupe.", {p1:3,p2:4}, Date.now()-1000*60*60*24*20),
+      mk("Negroni","Stir","Rocks / Old Fashioned",["classic","gin","bitter","aperitif"],
+        [ing("Gin",1,"oz","spirit"),ing("Campari",1,"oz","liqueur"),ing("Sweet vermouth",1,"oz","liqueur")],
+        "Orange peel","Equal parts. Stir, big rock, orange oils expressed over the top.", {p1:5,p2:2}, Date.now()-1000*60*60*24*15),
+      mk("Whiskey Sour","Shake","Coupe",["classic","whiskey","citrus","shaken"],
         [ing("Bourbon",2,"oz","spirit"),ing("Lemon juice",0.75,"oz","juice"),ing("Simple syrup",0.75,"oz","syrup"),ing("Egg white",0.5,"oz","other"),ing("Angostura bitters",2,"dash","bitters")],
-        "Dry shake first to emulsify, then shake again with ice.", {p1:4,p2:4}, Date.now()-1000*60*60*24*10),
-      mk("Espresso Martini","Shake",["modern","vodka","coffee","dessert","shaken"],
+        "Brandied cherry, orange twist","Dry shake first to emulsify, then shake again with ice.", {p1:4,p2:4}, Date.now()-1000*60*60*24*10),
+      mk("Espresso Martini","Shake","Coupe",["modern","vodka","coffee","dessert","shaken"],
         [ing("Vodka",1.5,"oz","spirit"),ing("Coffee liqueur",1,"oz","liqueur"),ing("Fresh espresso",1,"oz","mixer"),ing("Simple syrup",0.25,"oz","syrup")],
-        "Shake hard to build the crema. Three coffee beans to garnish.", {p1:0,p2:0}, Date.now()-1000*60*60*24*2)
+        "Three coffee beans","Shake hard to build the crema.", {p1:0,p2:0}, Date.now()-1000*60*60*24*2)
     ];
   }
   function ing(name,amount,unit,type){ return {name:name,amount:amount,unit:unit,type:type}; }
-  function mk(name,method,tags,ingredients,notes,ratings,dateAdded){
-    return {id:uid(),name:name,method:method,tags:tags,ingredients:ingredients,notes:notes,ratings:ratings,dateAdded:dateAdded};
+  function mk(name,method,glass,tags,ingredients,garnish,notes,ratings,dateAdded){
+    return {id:uid(),name:name,method:method,glass:glass,tags:tags,ingredients:ingredients,garnish:garnish,notes:notes,ratings:ratings,dateAdded:dateAdded};
   }
 
   function defaultDB(){
     return { cocktails: seedData(), people:{p1:"Me",p2:"Partner"}, prefs:{view:"card"} };
+  }
+
+  // Backward-compatible upgrade for ledgers saved before glass/garnish existed.
+  function migrateCocktail(c){
+    if(c.glass === undefined) c.glass = "";
+    if(c.garnish === undefined){
+      var garnishNames = [];
+      var kept = [];
+      (c.ingredients||[]).forEach(function(i){
+        if(i.type === "garnish") garnishNames.push(i.name);
+        else kept.push(i);
+      });
+      c.garnish = garnishNames.join(", ");
+      c.ingredients = kept;
+    }
+    return c;
   }
 
   var db;
@@ -692,6 +779,7 @@ main{
       if(!raw){ db = defaultDB(); save(); return; }
       db = JSON.parse(raw);
       if(!db.cocktails) db.cocktails = [];
+      db.cocktails.forEach(migrateCocktail);
       if(!db.people) db.people = {p1:"Me",p2:"Partner"};
       if(!db.prefs) db.prefs = {view:"card"};
     }catch(e){
@@ -871,17 +959,24 @@ main{
       top.appendChild(h2);
       var actions = document.createElement("div");
       actions.className = "card-actions";
+      actions.appendChild(mkActionBtn("⇪", function(){ openShareModal(c); }));
       actions.appendChild(mkActionBtn("✎", function(){ openCocktailModal(c); }));
       actions.appendChild(mkActionBtn("✕", function(){ deleteCocktail(c.id); }, "del"));
       top.appendChild(actions);
       card.appendChild(top);
 
       var badgeRow = document.createElement("div");
-      badgeRow.style.display="flex"; badgeRow.style.gap="8px"; badgeRow.style.alignItems="center";
+      badgeRow.className = "badge-row";
       var badge = document.createElement("span");
       badge.className = "method-badge";
       badge.textContent = c.method;
       badgeRow.appendChild(badge);
+      if(c.glass){
+        var gbadge = document.createElement("span");
+        gbadge.className = "glass-badge";
+        gbadge.textContent = c.glass;
+        badgeRow.appendChild(gbadge);
+      }
       card.appendChild(badgeRow);
 
       var eyebrow = document.createElement("div");
@@ -902,6 +997,15 @@ main{
         ul.appendChild(li);
       });
       card.appendChild(ul);
+
+      if(c.garnish){
+        var garnLine = document.createElement("div");
+        garnLine.className = "meta-line";
+        var lbl = document.createElement("span"); lbl.className="lbl"; lbl.textContent="Garnish";
+        garnLine.appendChild(lbl);
+        garnLine.appendChild(document.createTextNode(c.garnish));
+        card.appendChild(garnLine);
+      }
 
       if(c.notes){
         var notes = document.createElement("div");
@@ -946,6 +1050,13 @@ main{
       badge.className = "method-badge";
       badge.textContent = c.method;
       nameWrap.appendChild(badge);
+      if(c.glass){
+        var gbadge = document.createElement("span");
+        gbadge.className = "glass-badge";
+        gbadge.style.marginLeft = "6px";
+        gbadge.textContent = c.glass;
+        nameWrap.appendChild(gbadge);
+      }
       var rt = document.createElement("div");
       rt.className = "row-tags";
       rt.style.marginTop = "6px";
@@ -975,6 +1086,7 @@ main{
 
       var actions = document.createElement("div");
       actions.className = "row-actions";
+      actions.appendChild(mkActionBtn("⇪", function(){ openShareModal(c); }));
       actions.appendChild(mkActionBtn("✎", function(){ openCocktailModal(c); }));
       actions.appendChild(mkActionBtn("✕", function(){ deleteCocktail(c.id); }, "del"));
       row.appendChild(actions);
@@ -1096,12 +1208,40 @@ main{
     return row;
   }
 
+  function populateGlassSelect(currentGlass){
+    var sel = document.getElementById("fGlass");
+    sel.innerHTML = "";
+    var blank = document.createElement("option"); blank.value=""; blank.textContent="— None set —";
+    sel.appendChild(blank);
+    GLASSES.forEach(function(g){ var o=document.createElement("option"); o.value=g; o.textContent=g; sel.appendChild(o); });
+    var customOpt = document.createElement("option"); customOpt.value=CUSTOM_GLASS; customOpt.textContent=CUSTOM_GLASS;
+    sel.appendChild(customOpt);
+
+    var customInput = document.getElementById("fGlassCustom");
+    if(currentGlass && GLASSES.indexOf(currentGlass) === -1){
+      sel.value = CUSTOM_GLASS;
+      customInput.value = currentGlass;
+      customInput.style.display = "block";
+    } else {
+      sel.value = currentGlass || "";
+      customInput.value = "";
+      customInput.style.display = "none";
+    }
+  }
+  document.getElementById("fGlass").addEventListener("change", function(ev){
+    var customInput = document.getElementById("fGlassCustom");
+    customInput.style.display = (ev.target.value === CUSTOM_GLASS) ? "block" : "none";
+    if(ev.target.value === CUSTOM_GLASS) customInput.focus();
+  });
+
   function openCocktailModal(c){
     editingId = c ? c.id : null;
     document.getElementById("modalTitle").textContent = c ? "Edit Cocktail" : "New Cocktail";
     document.getElementById("fName").value = c ? c.name : "";
     document.getElementById("fMethod").value = c ? c.method : "Shake";
+    populateGlassSelect(c ? c.glass : "");
     document.getElementById("fTags").value = c ? (c.tags||[]).join(", ") : "";
+    document.getElementById("fGarnish").value = c ? (c.garnish||"") : "";
     document.getElementById("fNotes").value = c ? (c.notes||"") : "";
 
     var rows = document.getElementById("ingredientRows");
@@ -1151,17 +1291,20 @@ main{
     var name = document.getElementById("fName").value.trim();
     if(!name){ showToast("Please name the cocktail."); return; }
     var method = document.getElementById("fMethod").value;
+    var glassSel = document.getElementById("fGlass").value;
+    var glass = (glassSel === CUSTOM_GLASS) ? document.getElementById("fGlassCustom").value.trim() : glassSel;
     var tags = document.getElementById("fTags").value.split(",").map(function(t){return t.trim();}).filter(Boolean);
+    var garnish = document.getElementById("fGarnish").value.trim();
     var notes = document.getElementById("fNotes").value.trim();
     var ingredients = collectIngredients();
     var ratings = { p1: formRatingValues.fRatingP1||0, p2: formRatingValues.fRatingP2||0 };
 
     if(editingId){
       var c = db.cocktails.find(function(c){return c.id===editingId;});
-      c.name=name; c.method=method; c.tags=tags; c.notes=notes; c.ingredients=ingredients; c.ratings=ratings;
+      c.name=name; c.method=method; c.glass=glass; c.tags=tags; c.garnish=garnish; c.notes=notes; c.ingredients=ingredients; c.ratings=ratings;
       showToast("Saved " + name);
     } else {
-      db.cocktails.push({id:uid(), name:name, method:method, tags:tags, notes:notes, ingredients:ingredients, ratings:ratings, dateAdded:Date.now()});
+      db.cocktails.push({id:uid(), name:name, method:method, glass:glass, tags:tags, garnish:garnish, notes:notes, ingredients:ingredients, ratings:ratings, dateAdded:Date.now()});
       showToast("Added " + name);
     }
     save();
@@ -1213,6 +1356,34 @@ main{
     document.getElementById("importFile").click();
   });
 
+  function importParsedData(parsed){
+    if(!parsed || !Array.isArray(parsed.cocktails)){ showToast("That doesn't look like Proof data."); return; }
+    parsed.cocktails.forEach(migrateCocktail);
+
+    var doMerge = confirm(
+      "Import " + parsed.cocktails.length + " cocktail(s).\n\n" +
+      "OK = MERGE with your current ledger (matching IDs get updated, new ones added).\n" +
+      "Cancel = choose to REPLACE everything instead."
+    );
+    if(doMerge){
+      var byId = {};
+      db.cocktails.forEach(function(c){ byId[c.id]=c; });
+      parsed.cocktails.forEach(function(c){ byId[c.id]=c; });
+      db.cocktails = Object.keys(byId).map(function(k){return byId[k];});
+      if(parsed.people){ db.people.p1 = parsed.people.p1 || db.people.p1; db.people.p2 = parsed.people.p2 || db.people.p2; }
+      save(); renderAll();
+      showToast("Merged import");
+    } else {
+      var doFullReplace = confirm("Replace ALL current cocktails with the imported data? This cannot be undone.");
+      if(doFullReplace){
+        db.cocktails = parsed.cocktails;
+        if(parsed.people) db.people = parsed.people;
+        save(); renderAll();
+        showToast("Replaced with import");
+      }
+    }
+  }
+
   document.getElementById("importFile").addEventListener("change", function(ev){
     var file = ev.target.files[0];
     if(!file) return;
@@ -1221,33 +1392,26 @@ main{
       var parsed;
       try{ parsed = JSON.parse(reader.result); }
       catch(e){ showToast("That file isn't valid JSON."); return; }
-      if(!parsed || !Array.isArray(parsed.cocktails)){ showToast("File doesn't look like a Proof export."); return; }
-
-      var doReplace = confirm(
-        "Import " + parsed.cocktails.length + " cocktail(s).\n\n" +
-        "OK = MERGE with your current ledger (matching IDs get updated, new ones added).\n" +
-        "Cancel = choose to REPLACE everything instead."
-      );
-      if(doReplace){
-        var byId = {};
-        db.cocktails.forEach(function(c){ byId[c.id]=c; });
-        parsed.cocktails.forEach(function(c){ byId[c.id]=c; });
-        db.cocktails = Object.keys(byId).map(function(k){return byId[k];});
-        if(parsed.people){ db.people.p1 = parsed.people.p1 || db.people.p1; db.people.p2 = parsed.people.p2 || db.people.p2; }
-        save(); renderAll();
-        showToast("Merged import");
-      } else {
-        var doFullReplace = confirm("Replace ALL current cocktails with the imported file? This cannot be undone.");
-        if(doFullReplace){
-          db.cocktails = parsed.cocktails;
-          if(parsed.people) db.people = parsed.people;
-          save(); renderAll();
-          showToast("Replaced with import");
-        }
-      }
+      importParsedData(parsed);
       ev.target.value = "";
     };
     reader.readAsText(file);
+  });
+
+  document.getElementById("pasteImportBtn").addEventListener("click", function(){
+    var text = document.getElementById("pasteImportArea").value;
+    var startIdx = text.indexOf(SHARE_START);
+    var endIdx = text.indexOf(SHARE_END);
+    if(startIdx === -1 || endIdx === -1 || endIdx <= startIdx){
+      showToast("Couldn't find recipe data in that text.");
+      return;
+    }
+    var b64 = text.slice(startIdx + SHARE_START.length, endIdx).trim();
+    var parsed;
+    try{ parsed = JSON.parse(decodeURIComponent(escape(atob(b64)))); }
+    catch(e){ showToast("Couldn't read that recipe data."); return; }
+    importParsedData(parsed);
+    document.getElementById("pasteImportArea").value = "";
   });
 
   document.getElementById("clearAllBtn").addEventListener("click", function(){
@@ -1257,6 +1421,86 @@ main{
     save(); renderAll();
     closeSettingsModal();
     showToast("Ledger cleared");
+  });
+
+  /* ---------- Share ---------- */
+  function buildShareText(c){
+    var lines = [];
+    lines.push("🍸 " + c.name + " — shared from Proof");
+    lines.push("");
+    if(c.glass) lines.push("Glass: " + c.glass);
+    lines.push("Method: " + c.method);
+    lines.push("");
+    lines.push("Ingredients:");
+    (c.ingredients||[]).forEach(function(i){
+      var amt = i.amount ? (i.amount + " " + i.unit + " ") : "";
+      lines.push("- " + amt + i.name);
+    });
+    if(c.garnish){ lines.push(""); lines.push("Garnish: " + c.garnish); }
+    if(c.notes){ lines.push(""); lines.push("Notes: " + c.notes); }
+    if((c.tags||[]).length){ lines.push(""); lines.push("Tags: " + c.tags.join(", ")); }
+    lines.push("");
+    lines.push("— Add this to your own Proof ledger —");
+    lines.push("Open Proof → ⚙ Settings → \"Import a shared recipe\" → paste this whole message.");
+    lines.push("");
+
+    var payload = { cocktails: [ {
+      id: uid(), name:c.name, method:c.method, glass:c.glass||"", tags:c.tags||[],
+      ingredients:c.ingredients||[], garnish:c.garnish||"", notes:c.notes||"",
+      ratings:{p1:0,p2:0}, dateAdded: Date.now()
+    } ] };
+    var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    lines.push(SHARE_START + b64 + SHARE_END);
+    return lines.join("\n");
+  }
+
+  var shareCurrentCocktail = null;
+  function openShareModal(c){
+    shareCurrentCocktail = c;
+    document.getElementById("shareModalTitle").textContent = "Share " + c.name;
+    document.getElementById("shareTextArea").value = buildShareText(c);
+    document.getElementById("shareNativeBtn").style.display = (navigator.share) ? "inline-flex" : "none";
+    document.getElementById("shareModalOverlay").classList.add("open");
+  }
+  function closeShareModal(){
+    document.getElementById("shareModalOverlay").classList.remove("open");
+    shareCurrentCocktail = null;
+  }
+  document.getElementById("closeShareBtn").addEventListener("click", closeShareModal);
+  document.getElementById("shareModalOverlay").addEventListener("click", function(ev){ if(ev.target===this) closeShareModal(); });
+
+  document.getElementById("shareCopyBtn").addEventListener("click", function(){
+    var text = document.getElementById("shareTextArea").value;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ showToast("Copied to clipboard"); })
+        .catch(function(){ fallbackCopy(); });
+    } else { fallbackCopy(); }
+    function fallbackCopy(){
+      var ta = document.getElementById("shareTextArea");
+      ta.focus(); ta.select();
+      try{ document.execCommand("copy"); showToast("Copied to clipboard"); }
+      catch(e){ showToast("Copy failed — select the text manually."); }
+    }
+  });
+
+  document.getElementById("shareEmailBtn").addEventListener("click", function(){
+    if(!shareCurrentCocktail) return;
+    var text = document.getElementById("shareTextArea").value;
+    var subject = encodeURIComponent(shareCurrentCocktail.name + " — Cocktail Recipe (Proof)");
+    var body = encodeURIComponent(text);
+    window.location.href = "mailto:?subject=" + subject + "&body=" + body;
+  });
+
+  document.getElementById("shareWhatsappBtn").addEventListener("click", function(){
+    var text = document.getElementById("shareTextArea").value;
+    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+  });
+
+  document.getElementById("shareNativeBtn").addEventListener("click", function(){
+    if(!shareCurrentCocktail || !navigator.share) return;
+    var text = document.getElementById("shareTextArea").value;
+    navigator.share({ title: shareCurrentCocktail.name + " — Proof", text: text })
+      .catch(function(){ /* user cancelled or unsupported — no-op */ });
   });
 
   /* ---------- filter bar wiring ---------- */
